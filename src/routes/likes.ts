@@ -1,11 +1,13 @@
 import { Router, Request, Response } from 'express'
 import { requireAuth } from '../middleware/auth'
-import { supabase } from '../lib/supabase'
+import { getRlsClient } from '../lib/supabase'
 
 export const router = Router()
 
 router.post('/:postId/like', requireAuth, async (req: Request, res: Response) => {
-  if (!supabase || !req.user) return res.status(201).json({ ok: true })
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.status(201).json({ ok: true })
   const postId = req.params.postId
   try {
     const { error } = await supabase
@@ -31,7 +33,9 @@ router.post('/:postId/like', requireAuth, async (req: Request, res: Response) =>
 })
 
 router.post('/:postId/repost', requireAuth, async (req: Request, res: Response) => {
-  if (!supabase || !req.user) return res.status(201).json({ ok: true })
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.status(201).json({ ok: true })
   const postId = req.params.postId
   try {
     const { error } = await supabase

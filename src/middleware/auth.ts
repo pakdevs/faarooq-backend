@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 export interface JwtUser {
   sub: string // user id
   handle?: string
+  sb?: string // Supabase access token for RLS
   iat?: number
   exp?: number
 }

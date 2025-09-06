@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { requireAuth } from '../middleware/auth'
-import { supabase } from '../lib/supabase'
+import { getRlsClient } from '../lib/supabase'
 import { buildPage } from '../utils/pagination'
 import { z } from 'zod'
 
@@ -8,7 +8,9 @@ export const router = Router()
 
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   const { cursor } = req.query as { cursor?: string }
-  if (!supabase || !req.user) return res.json(buildPage([], null))
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.json(buildPage([], null))
   try {
     let query = supabase
       .from('notifications')
@@ -75,7 +77,9 @@ const markReadSchema = z.object({
 router.post('/read', requireAuth, async (req: Request, res: Response) => {
   const parsed = markReadSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
-  if (!supabase || !req.user) return res.json({ ok: true })
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.json({ ok: true })
   try {
     let builder = supabase
       .from('notifications')

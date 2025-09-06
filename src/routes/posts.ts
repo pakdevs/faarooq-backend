@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { requireAuth } from '../middleware/auth'
 import { buildPage } from '../utils/pagination'
-import { supabase } from '../lib/supabase'
+import { getRlsClient } from '../lib/supabase'
 import { z } from 'zod'
 
 export const router = Router()
@@ -17,7 +17,9 @@ const updateSchema = z.object({
 router.post('/', requireAuth, async (req: Request, res: Response) => {
   const parsed = createSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
-  if (!supabase || !req.user) return res.status(201).json({ id: 'post_stub' })
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
   try {
     const { data, error } = await supabase
       .from('posts')
@@ -33,7 +35,9 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
 
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   const { cursor } = req.query as { cursor?: string }
-  if (!supabase || !req.user) return res.json(buildPage([], null))
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.json(buildPage([], null))
   try {
     // 1) Get followed user IDs
     const followsResp = await supabase
@@ -74,7 +78,9 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 router.put('/:id', requireAuth, async (req: Request, res: Response) => {
   const parsed = updateSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
-  if (!supabase || !req.user) return res.json({ ok: true })
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.json({ ok: true })
   try {
     const { data, error } = await supabase
       .from('posts')
@@ -91,7 +97,9 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
 })
 
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
-  if (!supabase || !req.user) return res.status(204).send()
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.status(204).send()
   try {
     const { data, error } = await supabase
       .from('posts')
