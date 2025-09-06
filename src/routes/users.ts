@@ -5,14 +5,6 @@ import { z } from 'zod'
 
 export const router = Router()
 
-router.get('/:id', async (req: Request, res: Response) => {
-  const id = req.params.id
-  if (!supabase) return res.json({ id, handle: 'stub', display_name: 'Stub' })
-  const { data, error } = await supabase.from('users').select('*').eq('id', id).single()
-  if (error || !data) return res.status(404).json({ error: 'User not found' })
-  return res.json(data)
-})
-
 // Get current user's profile
 router.get('/me', requireAuth, async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
@@ -54,4 +46,13 @@ router.put('/me', requireAuth, async (req: Request, res: Response) => {
   } catch {
     return res.status(500).json({ error: 'Server error' })
   }
+})
+
+// Get user by id (keep after /me to avoid route shadowing)
+router.get('/:id', async (req: Request, res: Response) => {
+  const id = req.params.id
+  if (!supabase) return res.json({ id, handle: 'stub', display_name: 'Stub' })
+  const { data, error } = await supabase.from('users').select('*').eq('id', id).single()
+  if (error || !data) return res.status(404).json({ error: 'User not found' })
+  return res.json(data)
 })
