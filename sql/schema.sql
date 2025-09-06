@@ -200,6 +200,11 @@ begin
     create policy notif_read_own on public.notifications for select using (user_id = auth.uid());
   end if;
   if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'notifications' and policyname = 'notif_insert_actor'
+  ) then
+    create policy notif_insert_actor on public.notifications for insert with check (actor_id = auth.uid());
+  end if;
+  if not exists (
     select 1 from pg_policies where schemaname = 'public' and tablename = 'notifications' and policyname = 'notif_update_own'
   ) then
     create policy notif_update_own on public.notifications for update using (user_id = auth.uid()) with check (user_id = auth.uid());
