@@ -6,9 +6,12 @@ import { z } from 'zod'
 
 export const router = Router()
 
+const err = (res: Response, status: number, code: string, message?: string, details?: any) =>
+  res.status(status).json({ error: { code, message: message ?? code, details } })
+
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   const { cursor } = req.query as { cursor?: string }
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!req.user) return err(res, 401, 'unauthorized')
   const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json(buildPage([], null))
   try {
@@ -25,7 +28,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     }
 
     const { data, error } = await query
-    if (error) return res.status(500).json({ error: 'Failed to load notifications' })
+    if (error) return err(res, 500, 'load_notifications_failed')
     const items = (data ?? []) as Array<any>
 
     // Enrich with actor and post details (best-effort; ignore failures)
@@ -66,7 +69,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     const nextCursor = enriched.length ? enriched[enriched.length - 1].created_at : null
     return res.json(buildPage(enriched, nextCursor))
   } catch {
-    return res.status(500).json({ error: 'Server error' })
+    return err(res, 500, 'server_error')
   }
 })
 
@@ -76,8 +79,8 @@ const markReadSchema = z.object({
 
 router.post('/read', requireAuth, async (req: Request, res: Response) => {
   const parsed = markReadSchema.safeParse(req.body)
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!parsed.success) return err(res, 400, 'invalid_payload')
+  if (!req.user) return err(res, 401, 'unauthorized')
   const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json({ ok: true })
   try {
@@ -93,9 +96,9 @@ router.post('/read', requireAuth, async (req: Request, res: Response) => {
     }
 
     const { error } = await builder
-    if (error) return res.status(500).json({ error: 'Failed to mark read' })
+    if (error) return err(res, 500, 'mark_read_failed')
     return res.json({ ok: true })
   } catch {
-    return res.status(500).json({ error: 'Server error' })
+    return err(res, 500, 'server_error')
   }
 })

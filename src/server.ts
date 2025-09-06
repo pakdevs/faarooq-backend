@@ -12,6 +12,7 @@ import { router as postsRouter } from './routes/posts'
 import { router as followsRouter } from './routes/follows'
 import { router as likesRouter } from './routes/likes'
 import { router as notificationsRouter } from './routes/notifications'
+import { router as repostsRouter } from './routes/reposts'
 
 const app = express()
 
@@ -56,6 +57,7 @@ app.use('/api/posts', postsRouter)
 app.use('/api/follows', followsRouter)
 app.use('/api/likes', likesRouter)
 app.use('/api/notifications', notificationsRouter)
+app.use('/api/reposts', repostsRouter)
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: 'Not Found' })

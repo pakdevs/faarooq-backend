@@ -101,25 +101,49 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       return res.json(buildPage([], null))
     }
 
-    // 2) Fetch posts from followed users (simple cursor on created_at)
-    let query = supabase
+    // 2) Fetch authored posts by followees
+    let postsQ = supabase
       .from('posts')
       .select('*')
       .in('author_id', followeeIds)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
-      .order('id', { ascending: false })
-      .limit(20)
+      .limit(50)
 
-    if (cursor) {
-      query = query.lt('created_at', cursor)
-    }
+    // 3) Fetch reposts by followees
+    let repostsQ = supabase
+      .from('reposts')
+      .select('created_at, post_id, user_id')
+      .in('user_id', followeeIds)
+      .order('created_at', { ascending: false })
+      .limit(50)
 
-    const { data, error } = await query
-    if (error) return err(res, 500, 'load_posts_failed')
-    const items = data ?? []
-    const nextCursor = items.length ? items[items.length - 1].created_at : null
-    return res.json(buildPage(items, nextCursor))
+    const [postsResp, repostsResp] = await Promise.all([postsQ, repostsQ])
+    if (postsResp.error) return err(res, 500, 'load_posts_failed')
+    if (repostsResp.error) return err(res, 500, 'load_reposts_failed')
+
+    const posts = (postsResp.data ?? []).map((p: any) => ({
+      type: 'post' as const,
+      id: p.id,
+      post: p,
+      activity_at: p.created_at,
+    }))
+
+    const reposts = (repostsResp.data ?? []).map((r: any) => ({
+      type: 'repost' as const,
+      id: `${r.user_id}:${r.post_id}`,
+      repost: r,
+      activity_at: r.created_at,
+    }))
+
+    // Merge and sort by activity_at desc
+    const merged = [...posts, ...reposts].sort((a, b) => (a.activity_at < b.activity_at ? 1 : -1))
+
+    // Cursor: use activity_at (ISO string). If cursor provided, filter older.
+    const filtered = cursor ? merged.filter((i) => i.activity_at < String(cursor)) : merged
+    const page = filtered.slice(0, 20)
+    const nextCursor = page.length ? page[page.length - 1].activity_at : null
+    return res.json(buildPage(page, nextCursor))
   } catch {
     return res.status(500).json({ error: 'Server error' })
   }

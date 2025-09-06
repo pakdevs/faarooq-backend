@@ -175,7 +175,7 @@
     },
     "/api/posts": {
       "get": {
-        "summary": "Get timeline feed (excludes soft-deleted)",
+        "summary": "Get timeline feed (posts + repost activities; excludes soft-deleted posts)",
         "security": [{ "bearerAuth": [] }],
         "parameters": [{ "name": "cursor", "in": "query", "schema": { "type": "string" } }],
         "responses": {
@@ -212,6 +212,45 @@
             }
           }
         }
+      }
+    },
+    "/api/reposts": {
+      "post": {
+        "summary": "Repost a post",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "post_id": { "type": "string", "format": "uuid" } },
+                "required": ["post_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created" },
+          "400": { "description": "Bad Request" }
+        }
+      },
+      "delete": {
+        "summary": "Unrepost a post",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "post_id": { "type": "string", "format": "uuid" } },
+                "required": ["post_id"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "OK" } }
       }
     },
     "/api/posts/{id}/reply": {
@@ -281,7 +320,15 @@
             }
           }
         },
-        "responses": { "201": { "description": "Created" } }
+        "responses": {
+          "201": { "description": "Created" },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       },
       "delete": {
         "summary": "Unfollow a user",
@@ -298,7 +345,15 @@
             }
           }
         },
-        "responses": { "200": { "description": "OK" } }
+        "responses": {
+          "200": { "description": "OK" },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       }
     },
     "/api/likes": {
@@ -317,7 +372,15 @@
             }
           }
         },
-        "responses": { "201": { "description": "Created" } }
+        "responses": {
+          "201": { "description": "Created" },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       },
       "delete": {
         "summary": "Unlike a post",
@@ -342,7 +405,15 @@
         "summary": "List notifications",
         "security": [{ "bearerAuth": [] }],
         "parameters": [{ "name": "cursor", "in": "query", "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "OK" } }
+        "responses": {
+          "200": { "description": "OK" },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       }
     },
     "/api/notifications/read": {
@@ -363,7 +434,21 @@
             }
           }
         },
-        "responses": { "200": { "description": "OK" } }
+        "responses": {
+          "200": { "description": "OK" },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       }
     }
   }
