@@ -157,3 +157,32 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Server error' })
   }
 })
+
+// Get replies for a post (reverse-chronological, cursor-based)
+router.get('/:id/replies', requireAuth, async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const { cursor } = req.query as { cursor?: string }
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.json(buildPage([], null))
+  try {
+    let query = supabase
+      .from('posts')
+      .select('*')
+      .eq('reply_to_post_id', req.params.id)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(20)
+
+    if (cursor) {
+      query = query.lt('created_at', cursor)
+    }
+
+    const { data, error } = await query
+    if (error) return res.status(500).json({ error: 'Failed to load replies' })
+    const items = data ?? []
+    const nextCursor = items.length ? items[items.length - 1].created_at : null
+    return res.json(buildPage(items, nextCursor))
+  } catch {
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
