@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
-import { customAlphabet } from 'nanoid'
 import { supabase } from '../lib/supabase'
+import { randomUUID } from 'crypto'
 
 export const router = Router()
 
@@ -23,8 +23,7 @@ router.post('/signup', (req: Request, res: Response) => {
   const secret = process.env.JWT_SECRET
   if (!secret) return res.status(500).json({ error: 'JWT secret not configured' })
   // Stub user creation; replace with Supabase insert + password hashing
-  const nano = customAlphabet('1234567890abcdef', 16)
-  const userId = nano()
+  const userId = randomUUID()
   const token = jwt.sign({ sub: userId, handle: parsed.data.handle }, secret, { expiresIn: '7d' })
   // Best-effort: create a matching user row in Supabase so downstream routes work
   if (supabase) {
@@ -53,8 +52,7 @@ router.post('/login', (req: Request, res: Response) => {
   const secret = process.env.JWT_SECRET
   if (!secret) return res.status(500).json({ error: 'JWT secret not configured' })
   // Stub login; replace with Supabase user lookup + bcrypt compare
-  const nano = customAlphabet('1234567890abcdef', 16)
-  const userId = nano()
+  const userId = randomUUID()
   const token = jwt.sign({ sub: userId, handle: parsed.data.email.split('@')[0] }, secret, {
     expiresIn: '7d',
   })
