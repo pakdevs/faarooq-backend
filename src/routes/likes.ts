@@ -17,7 +17,12 @@ router.post('/:postId/like', requireAuth, async (req: Request, res: Response) =>
     if (!postResp.error && postResp.data && postResp.data.author_id !== req.user.sub) {
       await supabase
         .from('notifications')
-        .insert({ user_id: postResp.data.author_id, kind: 'like', actor_id: req.user.sub, post_id: postId })
+        .insert({
+          user_id: postResp.data.author_id,
+          kind: 'like',
+          actor_id: req.user.sub,
+          post_id: postId,
+        })
     }
     return res.status(201).json({ ok: true })
   } catch {
