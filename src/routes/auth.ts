@@ -17,7 +17,7 @@ const loginSchema = z.object({
   password: z.string().min(8),
 })
 
-router.post('/signup', (req: Request, res: Response) => {
+router.post('/signup', async (req: Request, res: Response) => {
   const parsed = signupSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
   const secret = process.env.JWT_SECRET
@@ -27,19 +27,17 @@ router.post('/signup', (req: Request, res: Response) => {
   const token = jwt.sign({ sub: userId, handle: parsed.data.handle }, secret, { expiresIn: '7d' })
   // Best-effort: create a matching user row in Supabase so downstream routes work
   if (supabase) {
-    ;(async () => {
-      try {
-        await supabase.from('users').upsert(
-          {
-            id: userId,
-            handle: parsed.data.handle,
-            email: parsed.data.email,
-            display_name: parsed.data.handle,
-          },
-          { onConflict: 'handle' }
-        )
-      } catch {}
-    })()
+    try {
+      await supabase.from('users').upsert(
+        {
+          id: userId,
+          handle: parsed.data.handle,
+          email: parsed.data.email,
+          display_name: parsed.data.handle,
+        },
+        { onConflict: 'handle' }
+      )
+    } catch {}
   }
   return res
     .status(201)
