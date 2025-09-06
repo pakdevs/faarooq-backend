@@ -33,10 +33,10 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
       .insert({ text: parsed.data.text, author_id: req.user.sub })
       .select('id')
       .single()
-  if (error) return err(res, 400, 'create_post_failed')
+    if (error) return err(res, 400, 'create_post_failed')
     return res.status(201).json({ id: data?.id })
   } catch {
-  return err(res, 500, 'server_error')
+    return err(res, 500, 'server_error')
   }
 })
 
@@ -50,9 +50,13 @@ router.post('/:id/reply', requireAuth, async (req: Request, res: Response) => {
   const parentId = req.params.id
   try {
     // Ensure parent exists and find its author
-    const parent = await supabase.from('posts').select('id, author_id, deleted_at').eq('id', parentId).is('deleted_at', null).single()
-    if (parent.error || !parent.data)
-      return err(res, 404, 'parent_not_found')
+    const parent = await supabase
+      .from('posts')
+      .select('id, author_id, deleted_at')
+      .eq('id', parentId)
+      .is('deleted_at', null)
+      .single()
+    if (parent.error || !parent.data) return err(res, 404, 'parent_not_found')
 
     // Create reply post
     const inserted = await supabase
@@ -60,8 +64,7 @@ router.post('/:id/reply', requireAuth, async (req: Request, res: Response) => {
       .insert({ text: parsed.data.text, author_id: req.user.sub, reply_to_post_id: parentId })
       .select('id')
       .single()
-    if (inserted.error || !inserted.data)
-      return err(res, 400, 'create_reply_failed')
+    if (inserted.error || !inserted.data) return err(res, 400, 'create_reply_failed')
 
     // Notify parent author (skip self-reply)
     if (parent.data.author_id && parent.data.author_id !== req.user.sub) {
@@ -75,7 +78,7 @@ router.post('/:id/reply', requireAuth, async (req: Request, res: Response) => {
 
     return res.status(201).json({ id: inserted.data.id })
   } catch {
-  return err(res, 500, 'server_error')
+    return err(res, 500, 'server_error')
   }
 })
 
@@ -91,7 +94,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       .select('followee_id')
       .eq('follower_id', req.user.sub)
 
-  if (followsResp.error) return err(res, 500, 'load_follows_failed')
+    if (followsResp.error) return err(res, 500, 'load_follows_failed')
     const followeeIds = (followsResp.data ?? []).map((r: any) => r.followee_id)
 
     if (!followeeIds.length) {
@@ -101,9 +104,9 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     // 2) Fetch posts from followed users (simple cursor on created_at)
     let query = supabase
       .from('posts')
-  .select('*')
+      .select('*')
       .in('author_id', followeeIds)
-  .is('deleted_at', null)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
       .limit(20)
@@ -113,7 +116,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     }
 
     const { data, error } = await query
-  if (error) return err(res, 500, 'load_posts_failed')
+    if (error) return err(res, 500, 'load_posts_failed')
     const items = data ?? []
     const nextCursor = items.length ? items[items.length - 1].created_at : null
     return res.json(buildPage(items, nextCursor))
@@ -185,7 +188,7 @@ router.get('/:id/replies', requireAuth, async (req: Request, res: Response) => {
     }
 
     const { data, error } = await query
-  if (error) return err(res, 500, 'load_replies_failed')
+    if (error) return err(res, 500, 'load_replies_failed')
     const items = data ?? []
     const nextCursor = items.length ? items[items.length - 1].created_at : null
     return res.json(buildPage(items, nextCursor))

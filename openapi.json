@@ -178,7 +178,15 @@
         "summary": "Get timeline feed (excludes soft-deleted)",
         "security": [{ "bearerAuth": [] }],
         "parameters": [{ "name": "cursor", "in": "query", "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "OK" }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
+        "responses": {
+          "200": { "description": "OK" },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       },
       "post": {
         "summary": "Create post",
@@ -195,7 +203,15 @@
             }
           }
         },
-  "responses": { "201": { "description": "Created" }, "400": { "description": "Invalid payload", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
+        "responses": {
+          "201": { "description": "Created" },
+          "400": {
+            "description": "Invalid payload",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       }
     },
     "/api/posts/{id}/reply": {
@@ -221,8 +237,16 @@
               }
             }
           }
-  },
-  "responses": { "201": { "description": "Created" }, "404": { "description": "Parent not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
+        },
+        "responses": {
+          "201": { "description": "Created" },
+          "404": {
+            "description": "Parent not found",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+            }
+          }
+        }
       }
     },
     "/api/posts/{id}/replies": {
