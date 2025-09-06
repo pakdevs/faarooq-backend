@@ -28,16 +28,22 @@ router.post('/signup', async (req: Request, res: Response) => {
   // Best-effort: create a matching user row in Supabase so downstream routes work
   if (supabase) {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('users')
-        .insert({ id: userId, handle: parsed.data.handle, display_name: parsed.data.handle })
+        .upsert(
+          { id: userId, handle: parsed.data.handle, display_name: parsed.data.handle },
+          {
+            onConflict: 'id',
+          }
+        )
+        .select('id, handle')
         .single()
-      if (error) {
-        console.error('Supabase users insert failed:', error.message)
+      if (error || !data) {
+        console.error('Supabase users upsert failed:', error?.message)
         return res.status(500).json({ error: 'DB user create failed' })
       }
     } catch (e) {
-      console.error('Supabase users insert threw:', e)
+      console.error('Supabase users upsert threw:', e)
       return res.status(500).json({ error: 'DB user create failed' })
     }
   }
