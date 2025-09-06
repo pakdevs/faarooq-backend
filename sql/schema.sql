@@ -14,6 +14,9 @@ create table if not exists public.users (
   created_at timestamptz not null default now()
 );
 
+-- NOTE: When using Supabase Auth, set public.users.id = auth.users.id for each account.
+-- We cannot declare a hard FK to auth.users in public schema, but code ensures IDs match.
+
 -- FOLLOWS
 create table if not exists public.follows (
   follower_id uuid not null references public.users(id) on delete cascade,
