@@ -33,13 +33,21 @@ const rand = () => Math.random().toString(36).slice(2, 8)
 ;(async () => {
   // A signup
   const a = rand()
-  const sa = await req('POST', '/api/auth/signup', { email: `a_${a}@ex.com`, password: 'Password#123', handle: `a_${a}` })
+  const sa = await req('POST', '/api/auth/signup', {
+    email: `a_${a}@ex.com`,
+    password: 'Password#123',
+    handle: `a_${a}`,
+  })
   const tokenA = sa.token
   // A creates root post
   const postA = await req('POST', '/api/posts', { text: 'root post' }, tokenA)
   // B signup
   const b = rand()
-  const sb = await req('POST', '/api/auth/signup', { email: `b_${b}@ex.com`, password: 'Password#123', handle: `b_${b}` })
+  const sb = await req('POST', '/api/auth/signup', {
+    email: `b_${b}@ex.com`,
+    password: 'Password#123',
+    handle: `b_${b}`,
+  })
   const tokenB = sb.token
   // B replies to A
   await req('POST', `/api/posts/${postA.id}/reply`, { text: 'a reply' }, tokenB)

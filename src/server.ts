@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import express, { Request, Response, NextFunction } from 'express'
+import path from 'path'
 import helmet from 'helmet'
 import cors from 'cors'
 import morgan from 'morgan'
@@ -24,6 +25,29 @@ app.use(limiter)
 
 app.get('/health', (req: Request, res: Response) => {
   res.json({ ok: true, uptime: process.uptime() })
+})
+
+// OpenAPI spec and docs
+app.get('/openapi.json', (_req: Request, res: Response) => {
+  const specPath = path.resolve(process.cwd(), 'openapi.json')
+  res.sendFile(specPath)
+})
+
+app.get('/docs', (_req: Request, res: Response) => {
+  const html = `<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Faarooq API Docs</title>
+      <style>body { margin: 0; padding: 0; }</style>
+    </head>
+    <body>
+      <redoc spec-url="/openapi.json"></redoc>
+      <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+    </body>
+  </html>`
+  res.type('html').send(html)
 })
 
 app.use('/api/auth', authRouter)

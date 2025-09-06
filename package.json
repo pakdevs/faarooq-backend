@@ -10,7 +10,10 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "db:apply:schema": "node scripts/exec-sql.mjs sql/schema.sql",
-    "db:apply:seed": "node scripts/exec-sql.mjs sql/seed.sql"
+    "db:apply:seed": "node scripts/exec-sql.mjs sql/seed.sql",
+    "spec:check": "node scripts/validate-json.mjs openapi.json",
+    "spec:postman": "npx --yes openapi-to-postmanv2 -s openapi.json -o postman_collection.json -p -O folderStrategy=Tags",
+    "spec:types": "npx --yes openapi-typescript openapi.json -o src/types/api.d.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
