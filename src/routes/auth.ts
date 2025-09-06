@@ -32,7 +32,6 @@ router.post('/signup', async (req: Request, res: Response) => {
         {
           id: userId,
           handle: parsed.data.handle,
-          email: parsed.data.email,
           display_name: parsed.data.handle,
         },
         { onConflict: 'handle' }
