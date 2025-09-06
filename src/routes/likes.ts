@@ -12,6 +12,13 @@ router.post('/:postId/like', requireAuth, async (req: Request, res: Response) =>
       .from('likes')
       .upsert({ user_id: req.user.sub, post_id: postId }, { onConflict: 'user_id,post_id' })
     if (error) return res.status(400).json({ error: 'Failed to like' })
+    // Notify the post author (if exists)
+    const postResp = await supabase.from('posts').select('author_id').eq('id', postId).single()
+    if (!postResp.error && postResp.data && postResp.data.author_id !== req.user.sub) {
+      await supabase
+        .from('notifications')
+        .insert({ user_id: postResp.data.author_id, kind: 'like', actor_id: req.user.sub, post_id: postId })
+    }
     return res.status(201).json({ ok: true })
   } catch {
     return res.status(500).json({ error: 'Server error' })

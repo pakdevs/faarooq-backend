@@ -15,6 +15,10 @@ router.post('/:id/follow', requireAuth, async (req: Request, res: Response) => {
         { onConflict: 'follower_id,followee_id' }
       )
     if (error) return res.status(400).json({ error: 'Failed to follow' })
+    // Create a follow notification for the followee
+    await supabase
+      .from('notifications')
+      .insert({ user_id: followeeId, kind: 'follow', actor_id: req.user.sub })
     return res.status(201).json({ ok: true })
   } catch {
     return res.status(500).json({ error: 'Server error' })
