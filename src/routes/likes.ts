@@ -1,0 +1,33 @@
+import { Router, Request, Response } from 'express'
+import { requireAuth } from '../middleware/auth'
+import { supabase } from '../lib/supabase'
+
+export const router = Router()
+
+router.post('/:postId/like', requireAuth, async (req: Request, res: Response) => {
+  if (!supabase || !req.user) return res.status(201).json({ ok: true })
+  const postId = req.params.postId
+  try {
+    const { error } = await supabase
+      .from('likes')
+      .upsert({ user_id: req.user.sub, post_id: postId }, { onConflict: 'user_id,post_id' })
+    if (error) return res.status(400).json({ error: 'Failed to like' })
+    return res.status(201).json({ ok: true })
+  } catch {
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
+
+router.post('/:postId/repost', requireAuth, async (req: Request, res: Response) => {
+  if (!supabase || !req.user) return res.status(201).json({ ok: true })
+  const postId = req.params.postId
+  try {
+    const { error } = await supabase
+      .from('reposts')
+      .upsert({ user_id: req.user.sub, post_id: postId }, { onConflict: 'user_id,post_id' })
+    if (error) return res.status(400).json({ error: 'Failed to repost' })
+    return res.status(201).json({ ok: true })
+  } catch {
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
