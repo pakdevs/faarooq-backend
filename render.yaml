@@ -3,15 +3,14 @@ services:
     name: faarook-api
     runtime: node
     plan: free
-    region: oregon # pick the closest US region to your Supabase (N. Virginia)
-    buildCommand: npm ci && npm run build
+    region: oregon
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: node dist/server.js
     healthCheckPath: /health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
-      # Set the following in Render Dashboard (do not commit secrets)
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
