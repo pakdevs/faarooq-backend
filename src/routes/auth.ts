@@ -31,14 +31,14 @@ router.post('/signup', async (req: Request, res: Response) => {
         .upsert({ handle: parsed.data.handle, display_name: parsed.data.handle }, { onConflict: 'handle' })
         .select('id, handle')
         .single()
-      if (error || !data) {
-        console.error('Supabase users upsert failed:', error?.message)
-        return res.status(500).json({ error: 'DB user create failed' })
+        if (error || !data) {
+          console.error('Supabase users upsert failed:', error?.message)
+          return res.status(500).json({ error: 'DB user create failed', detail: error?.message })
       }
   userId = String(data.id)
     } catch (e) {
-      console.error('Supabase users upsert threw:', e)
-      return res.status(500).json({ error: 'DB user create failed' })
+        console.error('Supabase users upsert threw:', e)
+        return res.status(500).json({ error: 'DB user create failed', detail: String(e) })
     }
   }
   const token = jwt.sign({ sub: userId, handle: parsed.data.handle }, secret, { expiresIn: '7d' })
