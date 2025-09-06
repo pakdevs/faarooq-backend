@@ -16,7 +16,17 @@
     "schemas": {
       "Error": {
         "type": "object",
-        "properties": { "error": { "type": "string" } },
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "details": { "type": "object" }
+            },
+            "required": ["code"]
+          }
+        },
         "required": ["error"]
       },
       "User": {
@@ -44,7 +54,8 @@
           "author_id": { "type": "string", "format": "uuid" },
           "text": { "type": "string" },
           "reply_to_post_id": { "type": ["string", "null"], "format": "uuid" },
-          "created_at": { "type": "string", "format": "date-time" }
+          "created_at": { "type": "string", "format": "date-time" },
+          "deleted_at": { "type": ["string", "null"], "format": "date-time" }
         },
         "required": ["id", "author_id", "text", "created_at"]
       },
@@ -164,10 +175,10 @@
     },
     "/api/posts": {
       "get": {
-        "summary": "Get timeline feed",
+        "summary": "Get timeline feed (excludes soft-deleted)",
         "security": [{ "bearerAuth": [] }],
         "parameters": [{ "name": "cursor", "in": "query", "schema": { "type": "string" } }],
-        "responses": { "200": { "description": "OK" } }
+        "responses": { "200": { "description": "OK" }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
       },
       "post": {
         "summary": "Create post",
@@ -184,7 +195,7 @@
             }
           }
         },
-        "responses": { "201": { "description": "Created" } }
+  "responses": { "201": { "description": "Created" }, "400": { "description": "Invalid payload", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
       }
     },
     "/api/posts/{id}/reply": {
@@ -210,13 +221,13 @@
               }
             }
           }
-        },
-        "responses": { "201": { "description": "Created" } }
+  },
+  "responses": { "201": { "description": "Created" }, "404": { "description": "Parent not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } }
       }
     },
     "/api/posts/{id}/replies": {
       "get": {
-        "summary": "List replies for a post",
+        "summary": "List replies for a post (excludes soft-deleted)",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           {

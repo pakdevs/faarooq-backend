@@ -6,6 +6,9 @@ import { z } from 'zod'
 
 export const router = Router()
 
+const err = (res: Response, status: number, code: string, message?: string, details?: any) =>
+  res.status(status).json({ error: { code, message: message ?? code, details } })
+
 const createSchema = z.object({
   text: z.string().min(1).max(280),
   media: z.array(z.string().url()).max(4).optional(),
@@ -20,36 +23,36 @@ const replySchema = z.object({
 
 router.post('/', requireAuth, async (req: Request, res: Response) => {
   const parsed = createSchema.safeParse(req.body)
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!parsed.success) return err(res, 400, 'invalid_payload')
+  if (!req.user) return err(res, 401, 'unauthorized')
   const supabase = getRlsClient(req.user.sb)
-  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+  if (!supabase) return err(res, 500, 'supabase_not_configured')
   try {
     const { data, error } = await supabase
       .from('posts')
       .insert({ text: parsed.data.text, author_id: req.user.sub })
       .select('id')
       .single()
-    if (error) return res.status(400).json({ error: 'Failed to create post' })
+  if (error) return err(res, 400, 'create_post_failed')
     return res.status(201).json({ id: data?.id })
   } catch {
-    return res.status(500).json({ error: 'Server error' })
+  return err(res, 500, 'server_error')
   }
 })
 
 // Reply to a post
 router.post('/:id/reply', requireAuth, async (req: Request, res: Response) => {
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!req.user) return err(res, 401, 'unauthorized')
   const parsed = replySchema.safeParse(req.body)
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
+  if (!parsed.success) return err(res, 400, 'invalid_payload')
   const supabase = getRlsClient(req.user.sb)
-  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+  if (!supabase) return err(res, 500, 'supabase_not_configured')
   const parentId = req.params.id
   try {
     // Ensure parent exists and find its author
-    const parent = await supabase.from('posts').select('id, author_id').eq('id', parentId).single()
+    const parent = await supabase.from('posts').select('id, author_id, deleted_at').eq('id', parentId).is('deleted_at', null).single()
     if (parent.error || !parent.data)
-      return res.status(404).json({ error: 'Parent post not found' })
+      return err(res, 404, 'parent_not_found')
 
     // Create reply post
     const inserted = await supabase
@@ -58,7 +61,7 @@ router.post('/:id/reply', requireAuth, async (req: Request, res: Response) => {
       .select('id')
       .single()
     if (inserted.error || !inserted.data)
-      return res.status(400).json({ error: 'Failed to create reply' })
+      return err(res, 400, 'create_reply_failed')
 
     // Notify parent author (skip self-reply)
     if (parent.data.author_id && parent.data.author_id !== req.user.sub) {
@@ -72,13 +75,13 @@ router.post('/:id/reply', requireAuth, async (req: Request, res: Response) => {
 
     return res.status(201).json({ id: inserted.data.id })
   } catch {
-    return res.status(500).json({ error: 'Server error' })
+  return err(res, 500, 'server_error')
   }
 })
 
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   const { cursor } = req.query as { cursor?: string }
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!req.user) return err(res, 401, 'unauthorized')
   const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json(buildPage([], null))
   try {
@@ -88,7 +91,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       .select('followee_id')
       .eq('follower_id', req.user.sub)
 
-    if (followsResp.error) return res.status(500).json({ error: 'Failed to load follows' })
+  if (followsResp.error) return err(res, 500, 'load_follows_failed')
     const followeeIds = (followsResp.data ?? []).map((r: any) => r.followee_id)
 
     if (!followeeIds.length) {
@@ -98,8 +101,9 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     // 2) Fetch posts from followed users (simple cursor on created_at)
     let query = supabase
       .from('posts')
-      .select('*')
+  .select('*')
       .in('author_id', followeeIds)
+  .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
       .limit(20)
@@ -109,7 +113,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     }
 
     const { data, error } = await query
-    if (error) return res.status(500).json({ error: 'Failed to load posts' })
+  if (error) return err(res, 500, 'load_posts_failed')
     const items = data ?? []
     const nextCursor = items.length ? items[items.length - 1].created_at : null
     return res.json(buildPage(items, nextCursor))
@@ -120,8 +124,8 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
 
 router.put('/:id', requireAuth, async (req: Request, res: Response) => {
   const parsed = updateSchema.safeParse(req.body)
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!parsed.success) return err(res, 400, 'invalid_payload')
+  if (!req.user) return err(res, 401, 'unauthorized')
   const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json({ ok: true })
   try {
@@ -130,37 +134,39 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
       .update({ text: parsed.data.text })
       .eq('id', req.params.id)
       .eq('author_id', req.user.sub)
+      .is('deleted_at', null)
       .select('id')
       .single()
-    if (error || !data) return res.status(403).json({ error: 'Not allowed' })
+    if (error || !data) return err(res, 403, 'not_allowed')
     return res.json({ ok: true })
   } catch {
-    return res.status(500).json({ error: 'Server error' })
+    return err(res, 500, 'server_error')
   }
 })
 
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!req.user) return err(res, 401, 'unauthorized')
   const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.status(204).send()
   try {
     const { data, error } = await supabase
       .from('posts')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', req.params.id)
       .eq('author_id', req.user.sub)
+      .is('deleted_at', null)
       .select('id')
       .single()
-    if (error || !data) return res.status(403).json({ error: 'Not allowed' })
+    if (error || !data) return err(res, 403, 'not_allowed')
     return res.status(204).send()
   } catch {
-    return res.status(500).json({ error: 'Server error' })
+    return err(res, 500, 'server_error')
   }
 })
 
 // Get replies for a post (reverse-chronological, cursor-based)
 router.get('/:id/replies', requireAuth, async (req: Request, res: Response) => {
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!req.user) return err(res, 401, 'unauthorized')
   const { cursor } = req.query as { cursor?: string }
   const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json(buildPage([], null))
@@ -169,6 +175,7 @@ router.get('/:id/replies', requireAuth, async (req: Request, res: Response) => {
       .from('posts')
       .select('*')
       .eq('reply_to_post_id', req.params.id)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
       .limit(20)
@@ -178,11 +185,11 @@ router.get('/:id/replies', requireAuth, async (req: Request, res: Response) => {
     }
 
     const { data, error } = await query
-    if (error) return res.status(500).json({ error: 'Failed to load replies' })
+  if (error) return err(res, 500, 'load_replies_failed')
     const items = data ?? []
     const nextCursor = items.length ? items[items.length - 1].created_at : null
     return res.json(buildPage(items, nextCursor))
   } catch {
-    return res.status(500).json({ error: 'Server error' })
+    return err(res, 500, 'server_error')
   }
 })

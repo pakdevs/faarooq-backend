@@ -34,6 +34,9 @@ create table if not exists public.posts (
   created_at timestamptz not null default now()
 );
 
+-- Soft delete support
+alter table public.posts add column if not exists deleted_at timestamptz null;
+
 -- MEDIA (optional for MVP)
 create table if not exists public.media (
   id uuid primary key default gen_random_uuid(),
@@ -71,6 +74,7 @@ create table if not exists public.notifications (
 
 -- Indexes for feeds/cursors
 create index if not exists posts_created_at_id_idx on public.posts (created_at desc, id desc);
+create index if not exists posts_deleted_created_idx on public.posts (deleted_at nulls first, created_at desc);
 create index if not exists follows_follower_followee_idx on public.follows (follower_id, followee_id);
 create index if not exists notifications_user_created_idx on public.notifications (user_id, created_at desc);
 create index if not exists likes_post_created_idx on public.likes (post_id, created_at desc);
