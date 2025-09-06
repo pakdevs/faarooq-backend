@@ -75,6 +75,7 @@ create index if not exists follows_follower_followee_idx on public.follows (foll
 create index if not exists notifications_user_created_idx on public.notifications (user_id, created_at desc);
 create index if not exists likes_post_created_idx on public.likes (post_id, created_at desc);
 create index if not exists reposts_post_created_idx on public.reposts (post_id, created_at desc);
+create index if not exists posts_reply_to_idx on public.posts (reply_to_post_id, created_at desc);
 
 -- RLS (enable)
 alter table public.users enable row level security;

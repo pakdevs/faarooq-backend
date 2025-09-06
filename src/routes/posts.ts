@@ -14,6 +14,10 @@ const updateSchema = z.object({
   text: z.string().min(1).max(280).optional(),
 })
 
+const replySchema = z.object({
+  text: z.string().min(1).max(280),
+})
+
 router.post('/', requireAuth, async (req: Request, res: Response) => {
   const parsed = createSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
@@ -28,6 +32,45 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
       .single()
     if (error) return res.status(400).json({ error: 'Failed to create post' })
     return res.status(201).json({ id: data?.id })
+  } catch {
+    return res.status(500).json({ error: 'Server error' })
+  }
+})
+
+// Reply to a post
+router.post('/:id/reply', requireAuth, async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const parsed = replySchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return res.status(500).json({ error: 'Supabase not configured' })
+  const parentId = req.params.id
+  try {
+    // Ensure parent exists and find its author
+    const parent = await supabase.from('posts').select('id, author_id').eq('id', parentId).single()
+    if (parent.error || !parent.data) return res.status(404).json({ error: 'Parent post not found' })
+
+    // Create reply post
+    const inserted = await supabase
+      .from('posts')
+      .insert({ text: parsed.data.text, author_id: req.user.sub, reply_to_post_id: parentId })
+      .select('id')
+      .single()
+    if (inserted.error || !inserted.data) return res.status(400).json({ error: 'Failed to create reply' })
+
+    // Notify parent author (skip self-reply)
+    if (parent.data.author_id && parent.data.author_id !== req.user.sub) {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: parent.data.author_id,
+          kind: 'reply',
+          actor_id: req.user.sub,
+          post_id: inserted.data.id,
+        })
+    }
+
+    return res.status(201).json({ id: inserted.data.id })
   } catch {
     return res.status(500).json({ error: 'Server error' })
   }
