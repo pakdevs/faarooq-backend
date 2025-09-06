@@ -26,21 +26,29 @@ router.post('/signup', async (req: Request, res: Response) => {
   let userId: string = randomUUID()
   if (supabase) {
     try {
-      const { data, error } = await supabase
+      // Attempt insert; if unique violation on handle occurs, return 409
+      const insertResp = await supabase
         .from('users')
-        .upsert(
-          { handle: parsed.data.handle, display_name: parsed.data.handle },
-          { onConflict: 'handle' }
-        )
+        .insert({ handle: parsed.data.handle, display_name: parsed.data.handle })
         .select('id, handle')
         .single()
-      if (error || !data) {
-        console.error('Supabase users upsert failed:', error?.message)
-        return res.status(500).json({ error: 'DB user create failed', detail: error?.message })
+      if (insertResp.error) {
+        const msg = insertResp.error.message || ''
+        // Supabase returns Postgres errors as messages containing 'duplicate key value violates unique constraint'
+        if (msg.toLowerCase().includes('duplicate key') || msg.toLowerCase().includes('unique')) {
+          return res.status(409).json({ error: 'Handle already taken' })
+        }
+        console.error('Supabase users insert failed:', msg)
+        return res.status(500).json({ error: 'DB user create failed', detail: msg })
       }
-      userId = String(data.id)
+      if (!insertResp.data) {
+        return res.status(500).json({ error: 'DB user create failed', detail: 'no data returned' })
+      }
+      userId = String(insertResp.data.id)
+      // Ensure handle echoes DB
+      parsed.data.handle = insertResp.data.handle
     } catch (e) {
-      console.error('Supabase users upsert threw:', e)
+      console.error('Supabase users insert threw:', e)
       return res.status(500).json({ error: 'DB user create failed', detail: String(e) })
     }
   }
