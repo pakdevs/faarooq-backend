@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
 import { customAlphabet } from 'nanoid'
+import { supabase } from '../lib/supabase'
 
 export const router = Router()
 
@@ -25,6 +26,22 @@ router.post('/signup', (req: Request, res: Response) => {
   const nano = customAlphabet('1234567890abcdef', 16)
   const userId = nano()
   const token = jwt.sign({ sub: userId, handle: parsed.data.handle }, secret, { expiresIn: '7d' })
+  // Best-effort: create a matching user row in Supabase so downstream routes work
+  if (supabase) {
+    ;(async () => {
+      try {
+        await supabase.from('users').upsert(
+          {
+            id: userId,
+            handle: parsed.data.handle,
+            email: parsed.data.email,
+            display_name: parsed.data.handle,
+          },
+          { onConflict: 'handle' }
+        )
+      } catch {}
+    })()
+  }
   return res
     .status(201)
     .json({ token, user: { id: userId, handle: parsed.data.handle, email: parsed.data.email } })
