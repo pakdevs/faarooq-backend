@@ -35,7 +35,7 @@ router.post('/signup', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Auth create failed', detail: msg })
     }
     const authUserId = authUser.id
-  const insertProfile = await supabaseAdmin
+    const insertProfile = await supabaseAdmin
       .from('users')
       .insert({ id: authUserId, handle: parsed.data.handle, display_name: parsed.data.handle })
       .select('id, handle')
@@ -43,25 +43,32 @@ router.post('/signup', async (req: Request, res: Response) => {
     if (insertProfile.error || !insertProfile.data) {
       const msg = insertProfile.error?.message || 'profile insert failed'
       // Roll back auth user to avoid orphan if handle conflict or other failure
-      try { await supabaseAdmin.auth.admin.deleteUser(authUserId) } catch {}
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(authUserId)
+      } catch {}
       if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
         return res.status(409).json({ error: 'Handle already taken' })
       }
       return res.status(500).json({ error: 'DB user create failed', detail: msg })
     }
     // Sign in to obtain a Supabase access token and embed it for RLS
-    const signIn = await supabaseAdmin.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password })
+    const signIn = await supabaseAdmin.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    })
     const accessToken = signIn.data?.session?.access_token
     const userId = String(insertProfile.data.id)
-    const token = jwt.sign({ sub: userId, handle: insertProfile.data.handle, sb: accessToken }, secret, {
-      expiresIn: '7d',
+    const token = jwt.sign(
+      { sub: userId, handle: insertProfile.data.handle, sb: accessToken },
+      secret,
+      {
+        expiresIn: '7d',
+      }
+    )
+    return res.status(201).json({
+      token,
+      user: { id: userId, handle: insertProfile.data.handle, email: parsed.data.email },
     })
-    return res
-      .status(201)
-      .json({
-        token,
-        user: { id: userId, handle: insertProfile.data.handle, email: parsed.data.email },
-      })
   } catch (e) {
     console.error('Signup with Supabase Auth failed:', e)
     return res.status(500).json({ error: 'Signup failed', detail: String(e) })
@@ -82,19 +89,21 @@ router.post('/login', async (req: Request, res: Response) => {
     if (error || !data?.user) return res.status(401).json({ error: 'Invalid credentials' })
     const userId = data.user.id
     // Ensure profile row exists (idempotent upsert by id with minimal defaults)
-    await supabaseAdmin
-      .from('users')
-      .upsert(
-        {
-          id: userId,
-          handle: parsed.data.email.split('@')[0],
-          display_name: parsed.data.email.split('@')[0],
-        },
-        { onConflict: 'id' }
-      )
-    const token = jwt.sign({ sub: userId, handle: parsed.data.email.split('@')[0], sb: data.session?.access_token }, secret, {
-      expiresIn: '7d',
-    })
+    await supabaseAdmin.from('users').upsert(
+      {
+        id: userId,
+        handle: parsed.data.email.split('@')[0],
+        display_name: parsed.data.email.split('@')[0],
+      },
+      { onConflict: 'id' }
+    )
+    const token = jwt.sign(
+      { sub: userId, handle: parsed.data.email.split('@')[0], sb: data.session?.access_token },
+      secret,
+      {
+        expiresIn: '7d',
+      }
+    )
     return res.json({ token })
   } catch (e) {
     return res.status(500).json({ error: 'Login failed', detail: String(e) })

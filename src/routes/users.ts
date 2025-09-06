@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { supabase } from '../lib/supabase'
+import { getRlsClient } from '../lib/supabase'
 import { requireAuth } from '../middleware/auth'
 import { z } from 'zod'
 
@@ -8,6 +8,7 @@ export const router = Router()
 // Get current user's profile
 router.get('/me', requireAuth, async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json({ id: req.user.sub, handle: 'stub', display_name: 'Stub' })
   const { data, error } = await supabase.from('users').select('*').eq('id', req.user.sub).single()
   if (error || !data) return res.status(404).json({ error: 'User not found' })
@@ -26,6 +27,7 @@ router.put('/me', requireAuth, async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
   const parsed = updateSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
+  const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json({ ok: true })
   try {
     const { data, error } = await supabase
@@ -51,6 +53,7 @@ router.put('/me', requireAuth, async (req: Request, res: Response) => {
 // Get user by id (keep after /me to avoid route shadowing)
 router.get('/:id', async (req: Request, res: Response) => {
   const id = req.params.id
+  const supabase = getRlsClient() // anon client; users_read_all policy allows public read
   if (!supabase) return res.json({ id, handle: 'stub', display_name: 'Stub' })
   const { data, error } = await supabase.from('users').select('*').eq('id', id).single()
   if (error || !data) return res.status(404).json({ error: 'User not found' })
