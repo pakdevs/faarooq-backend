@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
-import { supabaseAdmin } from '../lib/supabase'
+import { supabaseAdmin, getRlsClient } from '../lib/supabase'
 
 export const router = Router()
 
@@ -35,13 +35,22 @@ router.post('/signup', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Auth create failed', detail: msg })
     }
     const authUserId = authUser.id
-    const insertProfile = await supabaseAdmin
-      .from('users')
+    // Sign in to obtain a Supabase access token for RLS-bound profile insert
+    const signIn = await supabaseAdmin.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    })
+    const accessToken = signIn.data?.session?.access_token
+    const supabaseRls = getRlsClient(accessToken)
+    const insertProfile = await supabaseRls
+      ?.from('users')
       .insert({ id: authUserId, handle: parsed.data.handle, display_name: parsed.data.handle })
       .select('id, handle')
       .single()
-    if (insertProfile.error || !insertProfile.data) {
-      const msg = insertProfile.error?.message || 'profile insert failed'
+    const insertErr = (insertProfile as any)?.error
+    const insertData = (insertProfile as any)?.data
+    if (insertErr || !insertData) {
+      const msg = insertErr?.message || 'profile insert failed'
       // Roll back auth user to avoid orphan if handle conflict or other failure
       try {
         await supabaseAdmin.auth.admin.deleteUser(authUserId)
@@ -51,15 +60,9 @@ router.post('/signup', async (req: Request, res: Response) => {
       }
       return res.status(500).json({ error: 'DB user create failed', detail: msg })
     }
-    // Sign in to obtain a Supabase access token and embed it for RLS
-    const signIn = await supabaseAdmin.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
-    })
-    const accessToken = signIn.data?.session?.access_token
-    const userId = String(insertProfile.data.id)
+    const userId = String(insertData.id)
     const token = jwt.sign(
-      { sub: userId, handle: insertProfile.data.handle, sb: accessToken },
+      { sub: userId, handle: insertData.handle, sb: accessToken },
       secret,
       {
         expiresIn: '7d',
@@ -67,7 +70,7 @@ router.post('/signup', async (req: Request, res: Response) => {
     )
     return res.status(201).json({
       token,
-      user: { id: userId, handle: insertProfile.data.handle, email: parsed.data.email },
+      user: { id: userId, handle: insertData.handle, email: parsed.data.email },
     })
   } catch (e) {
     console.error('Signup with Supabase Auth failed:', e)
