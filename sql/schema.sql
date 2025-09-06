@@ -94,6 +94,11 @@ begin
     create policy users_read_all on public.users for select using (true);
   end if;
   if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'users' and policyname = 'users_insert_own'
+  ) then
+    create policy users_insert_own on public.users for insert with check (auth.uid() = id);
+  end if;
+  if not exists (
     select 1 from pg_policies where schemaname = 'public' and tablename = 'users' and policyname = 'users_update_own'
   ) then
     create policy users_update_own on public.users for update using (auth.uid() = id) with check (auth.uid() = id);
