@@ -61,13 +61,9 @@ router.post('/signup', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'DB user create failed', detail: msg })
     }
     const userId = String(insertData.id)
-    const token = jwt.sign(
-      { sub: userId, handle: insertData.handle, sb: accessToken },
-      secret,
-      {
-        expiresIn: '7d',
-      }
-    )
+    const token = jwt.sign({ sub: userId, handle: insertData.handle, sb: accessToken }, secret, {
+      expiresIn: '7d',
+    })
     return res.status(201).json({
       token,
       user: { id: userId, handle: insertData.handle, email: parsed.data.email },
