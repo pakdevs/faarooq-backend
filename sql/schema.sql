@@ -100,6 +100,15 @@ create table if not exists public.reports (
   created_at timestamptz not null default now()
 );
 
+-- Enrichment columns for reports (Phase 2) if not present
+alter table public.reports add column if not exists category text null;
+alter table public.reports add column if not exists severity text null check (severity in ('low','medium','high','critical'));
+alter table public.reports add column if not exists resolver_id uuid null references public.users(id) on delete set null;
+alter table public.reports add column if not exists resolved_at timestamptz null;
+alter table public.reports add column if not exists notes text null;
+alter table public.reports add column if not exists dedupe_hash text null;
+create index if not exists reports_dedupe_hash_idx on public.reports (dedupe_hash);
+
 -- NOTIFICATIONS (likes/replies basic)
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),

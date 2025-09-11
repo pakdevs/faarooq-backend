@@ -111,7 +111,13 @@ router.post('/login', async (req: Request, res: Response) => {
     const jti = nanoid()
     const role = process.env.ADMIN_EMAIL === parsed.data.email ? 'admin' : 'user'
     const token = jwt.sign(
-      { sub: userId, handle: parsed.data.email.split('@')[0], sb: data.session?.access_token, jti, role },
+      {
+        sub: userId,
+        handle: parsed.data.email.split('@')[0],
+        sb: data.session?.access_token,
+        jti,
+        role,
+      },
       secret,
       { expiresIn: '7d' }
     )

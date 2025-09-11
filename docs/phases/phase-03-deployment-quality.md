@@ -72,33 +72,40 @@
 - Core user journeys fully covered by automated tests.
 
 -- End Phase 03 Blueprint --
+
 ## 7. Actionable Checklist
 
 ### CI/CD & Automation
+
 - [ ] Full pipeline: lint → typecheck → tests → spec validate → artifact.
 - [ ] Spec drift guard (generated client diff) fails build.
 - [ ] SBOM + vuln scan gating.
 
 ### Environments
+
 - [ ] Ephemeral preview env per PR.
 - [ ] Rollback script & artifact retention.
 
 ### Testing & Quality
-- [ ] >80% integration coverage for core flows.
+
+- [ ] > 80% integration coverage for core flows.
 - [ ] k6 baseline (rps, p95, error rate) stored.
 - [ ] Contract tests auto-generated & passing.
 
 ### Observability
+
 - [ ] OpenTelemetry tracing (HTTP + DB spans).
 - [ ] Trace ID → logs propagation.
 - [ ] Cache metrics (hit/miss/evict) exported.
 
 ### Performance
+
 - [ ] Feed & notifications EXPLAIN ANALYZE review.
 - [ ] Index optimization doc.
 - [ ] Cache invalidation strategy doc.
 
 ### Docs / DX
+
 - [ ] CONTRIBUTING.md added.
 - [ ] Request lifecycle diagram.
 - [ ] Runbooks: rate limit, media failures, token revocation.

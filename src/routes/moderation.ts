@@ -107,7 +107,7 @@ router.post(
           { onConflict: 'muter_id,muted_id' }
         )
       if (error) return err(res, 400, 'mute_failed')
-  audit('mute_user', { actor: req.user.sub, target: parsed.data.user_id })
+      audit('mute_user', { actor: req.user.sub, target: parsed.data.user_id })
       try {
         await supabase.from('moderation_actions').insert({
           action_type: 'mute',
@@ -196,7 +196,7 @@ router.get('/audit', requireAuth, async (req: Request, res: Response) => {
   if (req.user.role !== 'admin') return err(res, 403, 'forbidden')
   const redis = getRedis()
   if (!redis) return res.json({ events: [], nextOffset: null })
-  const limit = Math.min( Number(req.query.limit) || 50, 200)
+  const limit = Math.min(Number(req.query.limit) || 50, 200)
   const offset = Number(req.query.offset) || 0
   try {
     const raw = await redis.lrange('audit:events', offset, offset + limit - 1)

@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
 
-interface Sample { path: string; method: string; status: number; ms: number }
+interface Sample {
+  path: string
+  method: string
+  status: number
+  ms: number
+}
 
 // Simple latency histogram buckets (ms)
 const LAT_BUCKETS = [50, 100, 200, 400, 800, 1600]

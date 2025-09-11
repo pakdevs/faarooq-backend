@@ -66,39 +66,47 @@
 - Operational drills executed at least once (backup/restore, feature rollback).
 
 -- End Phase 04 Blueprint --
+
 ## 7. Actionable Checklist
 
 ### Feature Flags & Delivery
+
 - [ ] Flag store + change audit.
 - [ ] Percentage rollout + kill switch.
 
 ### Ranking & Experiments
+
 - [ ] Ranking prototype behind flag.
 - [ ] Exposure logging (variant assignments).
 - [ ] Engagement delta metrics.
 
 ### Privacy & Compliance
+
 - [ ] Data inventory & classification.
 - [ ] Export (async job + signed URL) endpoint.
 - [ ] Deletion workflow (soft → delayed purge).
 - [ ] Audit archival & cold storage script.
 
 ### Analytics Pipeline
+
 - [ ] Event schema registry.
 - [ ] Lightweight event sink.
 - [ ] Daily DAU/MAU & retention cohort job.
 
 ### SDK & Versioning
+
 - [ ] Versioned OpenAPI releases.
 - [ ] Generated TS client publish.
 - [ ] Deprecation & Sunset header policy.
 
 ### Reliability / Ops
+
 - [ ] Backup automation + restore drill log.
 - [ ] Feature rollback drill.
 - [ ] Chaos scenarios validated.
 
 ### Abuse Detection
+
 - [ ] Rate anomaly detector (follows/likes per min thresholds).
 - [ ] Alerting rules configured.
 

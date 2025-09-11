@@ -3,9 +3,11 @@
 This dashboard summarizes progress across phases. Update checkboxes in the phase files; this page is a roll-up view.
 
 ## Phase 01 (Core Platform)
+
 Reference: `docs/phases/phase-01-core.md`
 
 Key Post-Phase Hardening Items:
+
 - [ ] SLOs defined & published
 - [ ] Threat model & secret rotation policy
 - [ ] Idempotency keys implemented (posts/interactions)
@@ -21,6 +23,7 @@ Key Post-Phase Hardening Items:
 - [ ] Block/mute concealment test
 
 ## Phase 02 (Moderation & Security)
+
 Reference: `docs/phases/phase-02-moderation-security.md`
 
 - [ ] Moderation enums (posts/users)
@@ -45,6 +48,7 @@ Reference: `docs/phases/phase-02-moderation-security.md`
 - [ ] Reputation hook (stretch)
 
 ## Phase 03 (Deployment & Quality)
+
 Reference: `docs/phases/phase-03-deployment-quality.md`
 
 - [ ] Full CI pipeline stages
@@ -52,7 +56,7 @@ Reference: `docs/phases/phase-03-deployment-quality.md`
 - [ ] SBOM + vuln scan gating
 - [ ] Ephemeral preview env
 - [ ] Rollback script + artifacts
-- [ ] >80% integration coverage
+- [ ] > 80% integration coverage
 - [ ] k6 baseline captured
 - [ ] Contract tests passing
 - [ ] OpenTelemetry tracing
@@ -66,6 +70,7 @@ Reference: `docs/phases/phase-03-deployment-quality.md`
 - [ ] Runbooks (rate limit/media/auth)
 
 ## Phase 04 (Advanced Roadmap)
+
 Reference: `docs/phases/phase-04-advanced-roadmap.md`
 
 - [ ] Flag store + audit
@@ -90,6 +95,7 @@ Reference: `docs/phases/phase-04-advanced-roadmap.md`
 - [ ] Abuse alerting rules
 
 ## Legend
+
 Unchecked items roll forward; update only in original phase files then sync here if needed.
 
 -- End Status Dashboard --

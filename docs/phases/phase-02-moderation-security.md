@@ -94,8 +94,8 @@ Focus: Trust & Safety, Security depth, richer data model usage.
 
 ### Media Pipeline
 
-- [ ] Redis queue for thumbnail + probe jobs.
-- [ ] Worker updates media.meta (thumb_url, thumb_pending=false).
+- [x] Redis queue for thumbnail + probe jobs.
+- [x] Worker updates media.meta (thumb_url, thumb_pending=false) (stub: pending real thumb_url logic).
 - [ ] Post-upload HEAD probe (size/MIME verify).
 
 ### Security & Sessions

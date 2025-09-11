@@ -3,6 +3,7 @@ import { requireAuth } from '../middleware/auth'
 import { rateUser } from '../middleware/rateUser'
 import { getRlsClient, supabaseAdmin } from '../lib/supabase'
 import { z } from 'zod'
+import { enqueueMediaJob } from '../lib/jobQueue'
 
 export const router = Router()
 
@@ -116,6 +117,9 @@ router.post(
         .select('id,url,media_type,meta')
         .single()
       if (error || !data) return err(res, 500, 'media_insert_failed')
+      // Enqueue thumbnail + probe jobs if needed
+      if (needsThumb) enqueueMediaJob({ type: 'thumbnail', mediaId: data.id, url })
+      enqueueMediaJob({ type: 'probe', mediaId: data.id, url })
       return res.status(201).json({ media: data })
     } catch {
       return err(res, 500, 'server_error')
