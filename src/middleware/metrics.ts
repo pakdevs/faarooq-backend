@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express'
 
-interface Sample {
-  path: string
-  method: string
-  status: number
-  ms: number
-}
+interface Sample { path: string; method: string; status: number; ms: number }
+
+// Simple latency histogram buckets (ms)
+const LAT_BUCKETS = [50, 100, 200, 400, 800, 1600]
+const histogram: Record<string, number> = {}
+for (const b of LAT_BUCKETS) histogram[String(b)] = 0
+histogram['+Inf'] = 0
 
 // Simple counters (increment only) — not window trimmed except for latency samples
 const counters: Record<string, number> = {
@@ -21,13 +22,19 @@ export function metricsMiddleware() {
     const start = performance.now()
     res.on('finish', () => {
       const ms = performance.now() - start
-      samples.push({
-        path: req.route?.path || req.path,
-        method: req.method,
-        status: res.statusCode,
-        ms,
-      })
+      const routePath = req.route?.path || req.path
+      samples.push({ path: routePath, method: req.method, status: res.statusCode, ms })
       counters.requests_total++
+      // histogram bucket increment
+      let bucketed = false
+      for (const b of LAT_BUCKETS) {
+        if (ms <= b) {
+          histogram[String(b)]++
+          bucketed = true
+          break
+        }
+      }
+      if (!bucketed) histogram['+Inf']++
       // drop old
       const cutoff = Date.now() - WINDOW
       while (samples.length && Date.now() - WINDOW > cutoff) {
@@ -54,7 +61,7 @@ export function metricsSnapshot() {
     count: v.count,
     avgMs: v.total / v.count,
   }))
-  return { routes: perRoute, counters }
+  return { routes: perRoute, counters, histogram }
 }
 
 export function incRateLimitHit() {
@@ -77,5 +84,25 @@ export function metricsPrometheus() {
     const safePath = path.replace(/"/g, '')
     lines.push(`app_route_avg_ms{method="${method}",path="${safePath}"} ${r.avgMs.toFixed(2)}`)
   }
+  lines.push('# HELP app_request_latency_ms Histogram of request latency (ms)')
+  lines.push('# TYPE app_request_latency_ms histogram')
+  let cumulative = 0
+  for (const b of [...LAT_BUCKETS.map(String), '+Inf']) {
+    cumulative += histogram[b]
+    lines.push(`app_request_latency_ms_bucket{le="${b}"} ${cumulative}`)
+  }
+  // sum and count
+  const totalCount = Object.values(histogram).reduce((a, b) => a + b, 0)
+  // approximate sum using average of bucket upper bound (rough; refine later)
+  let approxSum = 0
+  let prev = 0
+  for (const b of LAT_BUCKETS) {
+    const c = histogram[String(b)]
+    approxSum += c * b
+    prev += c
+  }
+  approxSum += histogram['+Inf'] * (LAT_BUCKETS[LAT_BUCKETS.length - 1] * 1.5)
+  lines.push(`app_request_latency_ms_sum ${approxSum.toFixed(2)}`)
+  lines.push(`app_request_latency_ms_count ${totalCount}`)
   return lines.join('\n') + '\n'
 }

@@ -81,45 +81,54 @@ Focus: Trust & Safety, Security depth, richer data model usage.
 - Updated OpenAPI published & consumed without regressions.
 
 -- End Phase 02 Blueprint --
+
 ## 7. Actionable Checklist
 
 ### Moderation & Data Model
-- [ ] posts.moderation_state ENUM (active, soft_deleted, shadowbanned, quarantined).
-- [ ] users.moderation_state ENUM.
-- [ ] moderation_actions table (action log).
+
+- [x] posts.moderation_state ENUM (active, soft_deleted, shadowbanned, quarantined).
+- [x] users.moderation_state ENUM.
+- [x] moderation_actions table (action log).
 - [ ] Enrich reports (category, severity, resolver_id, resolved_at, notes, dedupe_hash).
 - [ ] Report dedupe (same reporter+target within 24h).
 
 ### Media Pipeline
+
 - [ ] Redis queue for thumbnail + probe jobs.
 - [ ] Worker updates media.meta (thumb_url, thumb_pending=false).
 - [ ] Post-upload HEAD probe (size/MIME verify).
 
 ### Security & Sessions
+
 - [ ] Session/device listing + revoke endpoint.
 - [ ] Password breach check integration.
 - [ ] Harden CSP (no unsafe-inline; nonces/hashes).
 
 ### Observability & Metrics
-- [ ] Histogram for request duration.
+
+- [x] Histogram for request duration.
 - [ ] Rate limit hit counter by action.
 - [ ] 5xx error counter per route.
 
 ### Audit & Retrieval
-- [ ] Admin audit pagination endpoint.
-- [ ] RBAC role claim enforcement.
+
+- [x] Admin audit pagination endpoint.
+- [x] RBAC role claim enforcement.
 - [ ] Audit retention (trim >90d).
 
 ### Documentation
+
 - [ ] OpenAPI: moderation/report schemas + global rate limit headers.
 - [ ] Moderation flow diagram.
 
 ### Testing
+
 - [ ] Block/mute feed & notifications tests.
 - [ ] Audit retrieval pagination test.
 - [ ] Thumbnail job lifecycle test.
 
 ### Stretch
+
 - [ ] Reputation scoring placeholder hook.
 
 Carry incomplete critical items into Phase 03 gating.

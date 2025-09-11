@@ -11,6 +11,7 @@ create table if not exists public.users (
   display_name text,
   bio text,
   avatar_url text,
+  moderation_state text not null default 'active' check (moderation_state in ('active','shadowbanned','quarantined')),
   created_at timestamptz not null default now()
 );
 
@@ -36,6 +37,20 @@ create table if not exists public.posts (
 
 -- Soft delete support
 alter table public.posts add column if not exists deleted_at timestamptz null;
+-- Moderation state for posts
+alter table public.posts add column if not exists moderation_state text not null default 'active' check (moderation_state in ('active','soft_deleted','shadowbanned','quarantined'));
+
+-- Moderation actions audit (lightweight)
+create table if not exists public.moderation_actions (
+  id uuid primary key default gen_random_uuid(),
+  action_type text not null,
+  actor_id uuid null references public.users(id) on delete set null,
+  target_type text not null, -- e.g. 'user' | 'post'
+  target_id uuid null,
+  context_json jsonb null,
+  created_at timestamptz not null default now()
+);
+create index if not exists moderation_actions_created_idx on public.moderation_actions (created_at desc);
 
 -- MEDIA (optional for MVP)
 create table if not exists public.media (

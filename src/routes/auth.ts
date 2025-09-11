@@ -67,12 +67,12 @@ router.post('/signup', async (req: Request, res: Response) => {
     }
     const userId = String(insertData.id)
     const jti = nanoid()
+    // Basic role stub: first user could be admin (example heuristic; refine later)
+    const role = process.env.ADMIN_EMAIL === parsed.data.email ? 'admin' : 'user'
     const token = jwt.sign(
-      { sub: userId, handle: insertData.handle, sb: accessToken, jti },
+      { sub: userId, handle: insertData.handle, sb: accessToken, jti, role },
       secret,
-      {
-        expiresIn: '7d',
-      }
+      { expiresIn: '7d' }
     )
     const redis = getRedis()
     if (redis) await redis.set(`jti:${jti}`, '1', 'EX', 7 * 24 * 3600)
@@ -109,8 +109,9 @@ router.post('/login', async (req: Request, res: Response) => {
       { onConflict: 'id' }
     )
     const jti = nanoid()
+    const role = process.env.ADMIN_EMAIL === parsed.data.email ? 'admin' : 'user'
     const token = jwt.sign(
-      { sub: userId, handle: parsed.data.email.split('@')[0], sb: data.session?.access_token, jti },
+      { sub: userId, handle: parsed.data.email.split('@')[0], sb: data.session?.access_token, jti, role },
       secret,
       { expiresIn: '7d' }
     )

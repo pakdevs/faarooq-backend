@@ -6,6 +6,7 @@ export interface JwtUser {
   sub: string // user id
   handle?: string
   sb?: string // Supabase access token for RLS
+  role?: string // 'admin' | 'user'
   iat?: number
   exp?: number
 }
