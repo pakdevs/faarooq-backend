@@ -19,19 +19,15 @@ jobs:
           node-version: 20
 
       - name: Install deps
-        working-directory: backend
         run: npm ci
 
       - name: TypeScript build
-        working-directory: backend
         run: npm run build
 
       - name: Validate OpenAPI spec
-        working-directory: backend
         run: npm run spec:check
 
       - name: Generate Postman collection
-        working-directory: backend
         run: npm run spec:postman
 
       - name: Upload Postman artifacts
@@ -39,18 +35,18 @@ jobs:
         with:
           name: postman-artifacts
           path: |
-            backend/postman_collection.json
-            backend/postman_environment.json
+            postman_collection.json
+            postman_environment.json
 
-      - name: Optionally publish to Postman (if secrets set)
-        if: ${{ secrets.POSTMAN_API_KEY && secrets.POSTMAN_WORKSPACE_ID }}
-        working-directory: backend
-        env:
-          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
-          POSTMAN_WORKSPACE_ID: ${{ secrets.POSTMAN_WORKSPACE_ID }}
-        run: |
-          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('postman_collection.json','utf8'));fs.writeFileSync('postman_wrapped.json', JSON.stringify({collection:c}))"
-          curl -sS -X POST "https://api.getpostman.com/collections?workspace=${POSTMAN_WORKSPACE_ID}" \
-            -H "X-Api-Key: ${POSTMAN_API_KEY}" \
-            -H "Content-Type: application/json" \
-            --data-binary @postman_wrapped.json
+      # Uncomment and configure if you want to auto-publish to Postman
+      # - name: Publish to Postman workspace
+      #   if: secrets.POSTMAN_API_KEY != null && secrets.POSTMAN_WORKSPACE_ID != null
+      #   env:
+      #     POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+      #     POSTMAN_WORKSPACE_ID: ${{ secrets.POSTMAN_WORKSPACE_ID }}
+      #   run: |
+      #     node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('postman_collection.json','utf8'));fs.writeFileSync('postman_wrapped.json', JSON.stringify({collection:c}))"
+      #     curl -sS -X POST "https://api.getpostman.com/collections?workspace=${POSTMAN_WORKSPACE_ID}" \
+      #       -H "X-Api-Key: ${POSTMAN_API_KEY}" \
+      #       -H "Content-Type: application/json" \
+      #       --data-binary @postman_wrapped.json
