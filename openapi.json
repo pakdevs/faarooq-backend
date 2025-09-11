@@ -148,7 +148,7 @@
             }
           },
           "400": {
-            "description": "Bad Request", 
+            "description": "Bad Request",
             "content": {
               "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
             }
@@ -206,7 +206,7 @@
           }
         },
         "responses": {
-          "200": { 
+          "200": {
             "description": "OK",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/User" } } }
           },
