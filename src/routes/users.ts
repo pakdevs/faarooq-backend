@@ -26,6 +26,28 @@ const updateSchema = z.object({
   avatar_url: z.string().url().optional(),
 })
 
+// Lightweight avatar attach (client first uploads via /api/media/upload-url then calls this with resulting public URL)
+const avatarSchema = z.object({ avatar_url: z.string().url() })
+router.post('/me/avatar', requireAuth, async (req: Request, res: Response) => {
+  if (!req.user) return err(res, 401, 'unauthorized')
+  const parsed = avatarSchema.safeParse(req.body)
+  if (!parsed.success) return err(res, 400, 'invalid_payload')
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return err(res, 500, 'supabase_not_configured')
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ avatar_url: parsed.data.avatar_url })
+      .eq('id', req.user.sub)
+      .select('id, handle, display_name, bio, avatar_url')
+      .single()
+    if (error || !data) return err(res, 500, 'avatar_update_failed')
+    return res.status(200).json(data)
+  } catch {
+    return err(res, 500, 'server_error')
+  }
+})
+
 router.put('/me', requireAuth, async (req: Request, res: Response) => {
   if (!req.user) return err(res, 401, 'unauthorized')
   const parsed = updateSchema.safeParse(req.body)

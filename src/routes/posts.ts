@@ -3,6 +3,7 @@ import { requireAuth } from '../middleware/auth'
 import { buildPage } from '../utils/pagination'
 import { getRlsClient } from '../lib/supabase'
 import { z } from 'zod'
+import { rateUser } from '../middleware/rateUser'
 
 export const router = Router()
 
@@ -21,66 +22,76 @@ const replySchema = z.object({
   text: z.string().min(1).max(280),
 })
 
-router.post('/', requireAuth, async (req: Request, res: Response) => {
-  const parsed = createSchema.safeParse(req.body)
-  if (!parsed.success) return err(res, 400, 'invalid_payload')
-  if (!req.user) return err(res, 401, 'unauthorized')
-  const supabase = getRlsClient(req.user.sb)
-  if (!supabase) return err(res, 500, 'supabase_not_configured')
-  try {
-    const { data, error } = await supabase
-      .from('posts')
-      .insert({ text: parsed.data.text, author_id: req.user.sub })
-      .select('id')
-      .single()
-    if (error) return err(res, 400, 'create_post_failed')
-    return res.status(201).json({ id: data?.id })
-  } catch {
-    return err(res, 500, 'server_error')
+router.post(
+  '/',
+  requireAuth,
+  rateUser({ action: 'post_create', limit: 30, windowMs: 60_000 }),
+  async (req: Request, res: Response) => {
+    const parsed = createSchema.safeParse(req.body)
+    if (!parsed.success) return err(res, 400, 'invalid_payload')
+    if (!req.user) return err(res, 401, 'unauthorized')
+    const supabase = getRlsClient(req.user.sb)
+    if (!supabase) return err(res, 500, 'supabase_not_configured')
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .insert({ text: parsed.data.text, author_id: req.user.sub })
+        .select('id')
+        .single()
+      if (error) return err(res, 400, 'create_post_failed')
+      return res.status(201).json({ id: data?.id })
+    } catch {
+      return err(res, 500, 'server_error')
+    }
   }
-})
+)
 
 // Reply to a post
-router.post('/:id/reply', requireAuth, async (req: Request, res: Response) => {
-  if (!req.user) return err(res, 401, 'unauthorized')
-  const parsed = replySchema.safeParse(req.body)
-  if (!parsed.success) return err(res, 400, 'invalid_payload')
-  const supabase = getRlsClient(req.user.sb)
-  if (!supabase) return err(res, 500, 'supabase_not_configured')
-  const parentId = req.params.id
-  try {
-    // Ensure parent exists and find its author
-    const parent = await supabase
-      .from('posts')
-      .select('id, author_id, deleted_at')
-      .eq('id', parentId)
-      .is('deleted_at', null)
-      .single()
-    if (parent.error || !parent.data) return err(res, 404, 'parent_not_found')
+router.post(
+  '/:id/reply',
+  requireAuth,
+  rateUser({ action: 'post_reply', limit: 60, windowMs: 60_000 }),
+  async (req: Request, res: Response) => {
+    if (!req.user) return err(res, 401, 'unauthorized')
+    const parsed = replySchema.safeParse(req.body)
+    if (!parsed.success) return err(res, 400, 'invalid_payload')
+    const supabase = getRlsClient(req.user.sb)
+    if (!supabase) return err(res, 500, 'supabase_not_configured')
+    const parentId = req.params.id
+    try {
+      // Ensure parent exists and find its author
+      const parent = await supabase
+        .from('posts')
+        .select('id, author_id, deleted_at')
+        .eq('id', parentId)
+        .is('deleted_at', null)
+        .single()
+      if (parent.error || !parent.data) return err(res, 404, 'parent_not_found')
 
-    // Create reply post
-    const inserted = await supabase
-      .from('posts')
-      .insert({ text: parsed.data.text, author_id: req.user.sub, reply_to_post_id: parentId })
-      .select('id')
-      .single()
-    if (inserted.error || !inserted.data) return err(res, 400, 'create_reply_failed')
+      // Create reply post
+      const inserted = await supabase
+        .from('posts')
+        .insert({ text: parsed.data.text, author_id: req.user.sub, reply_to_post_id: parentId })
+        .select('id')
+        .single()
+      if (inserted.error || !inserted.data) return err(res, 400, 'create_reply_failed')
 
-    // Notify parent author (skip self-reply)
-    if (parent.data.author_id && parent.data.author_id !== req.user.sub) {
-      await supabase.from('notifications').insert({
-        user_id: parent.data.author_id,
-        kind: 'reply',
-        actor_id: req.user.sub,
-        post_id: inserted.data.id,
-      })
+      // Notify parent author (skip self-reply)
+      if (parent.data.author_id && parent.data.author_id !== req.user.sub) {
+        await supabase.from('notifications').insert({
+          user_id: parent.data.author_id,
+          kind: 'reply',
+          actor_id: req.user.sub,
+          post_id: inserted.data.id,
+        })
+      }
+
+      return res.status(201).json({ id: inserted.data.id })
+    } catch {
+      return err(res, 500, 'server_error')
     }
-
-    return res.status(201).json({ id: inserted.data.id })
-  } catch {
-    return err(res, 500, 'server_error')
   }
-})
+)
 
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   const { cursor } = req.query as { cursor?: string }
@@ -101,20 +112,42 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
       return res.json(buildPage([], null))
     }
 
-    // 2) Fetch authored posts by followees
+    // 2) Determine block/mute relationships to exclude
+    const blockedResp = await supabase
+      .from('blocks')
+      .select('blocked_id')
+      .eq('blocker_id', req.user.sub)
+    // Users who have blocked me (I should not see their content)
+    const blockedMeResp = await supabase
+      .from('blocks')
+      .select('blocker_id')
+      .eq('blocked_id', req.user.sub)
+    const mutedResp = await supabase.from('mutes').select('muted_id').eq('muter_id', req.user.sub)
+    const blockedIds = (blockedResp.data ?? []).map((r: any) => r.blocked_id)
+    const blockedMeIds = (blockedMeResp.data ?? []).map((r: any) => r.blocker_id)
+    const mutedIds = (mutedResp.data ?? []).map((r: any) => r.muted_id)
+    const excludeIds = new Set([...blockedIds, ...blockedMeIds, ...mutedIds])
+
+    // 3) Fetch authored posts by followees (excluding blocked/muted)
     let postsQ = supabase
       .from('posts')
       .select('*')
-      .in('author_id', followeeIds)
+      .in(
+        'author_id',
+        followeeIds.filter((id: string) => !excludeIds.has(id))
+      )
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(50)
 
-    // 3) Fetch reposts by followees
+    // 4) Fetch reposts by followees (excluding actors blocked/muted)
     let repostsQ = supabase
       .from('reposts')
       .select('created_at, post_id, user_id')
-      .in('user_id', followeeIds)
+      .in(
+        'user_id',
+        followeeIds.filter((id: string) => !excludeIds.has(id))
+      )
       .order('created_at', { ascending: false })
       .limit(50)
 
@@ -146,6 +179,50 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     return res.json(buildPage(page, nextCursor))
   } catch {
     return res.status(500).json({ error: 'Server error' })
+  }
+})
+
+// Fetch single post (respect soft-delete and block/mute both directions)
+router.get('/:id', requireAuth, async (req: Request, res: Response) => {
+  if (!req.user) return err(res, 401, 'unauthorized')
+  const supabase = getRlsClient(req.user.sb)
+  if (!supabase) return err(res, 500, 'supabase_not_configured')
+  try {
+    const postResp = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', req.params.id)
+      .is('deleted_at', null)
+      .single()
+    if (postResp.error || !postResp.data) return err(res, 404, 'not_found')
+    const authorId = (postResp.data as any).author_id
+    const [blocked, blockedMe, muted] = await Promise.all([
+      supabase
+        .from('blocks')
+        .select('blocked_id')
+        .eq('blocker_id', req.user.sub)
+        .eq('blocked_id', authorId),
+      supabase
+        .from('blocks')
+        .select('blocker_id')
+        .eq('blocked_id', req.user.sub)
+        .eq('blocker_id', authorId),
+      supabase
+        .from('mutes')
+        .select('muted_id')
+        .eq('muter_id', req.user.sub)
+        .eq('muted_id', authorId),
+    ])
+    if (
+      (blocked.data?.length || 0) > 0 ||
+      (blockedMe.data?.length || 0) > 0 ||
+      (muted.data?.length || 0) > 0
+    ) {
+      return err(res, 404, 'not_found') // hide existence
+    }
+    return res.json(postResp.data)
+  } catch {
+    return err(res, 500, 'server_error')
   }
 })
 
@@ -198,6 +275,18 @@ router.get('/:id/replies', requireAuth, async (req: Request, res: Response) => {
   const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json(buildPage([], null))
   try {
+    // Build exclusion sets (blocked/muted either direction)
+    const [blockedResp, blockedMeResp, mutedResp] = await Promise.all([
+      supabase.from('blocks').select('blocked_id').eq('blocker_id', req.user.sub),
+      supabase.from('blocks').select('blocker_id').eq('blocked_id', req.user.sub),
+      supabase.from('mutes').select('muted_id').eq('muter_id', req.user.sub),
+    ])
+    const exclude = new Set([
+      ...(blockedResp.data ?? []).map((r: any) => r.blocked_id),
+      ...(blockedMeResp.data ?? []).map((r: any) => r.blocker_id),
+      ...(mutedResp.data ?? []).map((r: any) => r.muted_id),
+    ])
+
     let query = supabase
       .from('posts')
       .select('*')
@@ -213,7 +302,7 @@ router.get('/:id/replies', requireAuth, async (req: Request, res: Response) => {
 
     const { data, error } = await query
     if (error) return err(res, 500, 'load_replies_failed')
-    const items = data ?? []
+    const items = (data ?? []).filter((p: any) => !exclude.has(p.author_id))
     const nextCursor = items.length ? items[items.length - 1].created_at : null
     return res.json(buildPage(items, nextCursor))
   } catch {

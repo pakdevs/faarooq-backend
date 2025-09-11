@@ -61,6 +61,30 @@ create table if not exists public.reposts (
   primary key (user_id, post_id)
 );
 
+-- MODERATION: Blocks (reciprocal visibility exclusion) & Mutes (client-side hide) & Reports
+create table if not exists public.blocks (
+  blocker_id uuid not null references public.users(id) on delete cascade,
+  blocked_id uuid not null references public.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id)
+);
+
+create table if not exists public.mutes (
+  muter_id uuid not null references public.users(id) on delete cascade,
+  muted_id uuid not null references public.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (muter_id, muted_id)
+);
+
+create table if not exists public.reports (
+  id uuid primary key default gen_random_uuid(),
+  reporter_id uuid not null references public.users(id) on delete cascade,
+  target_user_id uuid null references public.users(id) on delete set null,
+  post_id uuid null references public.posts(id) on delete set null,
+  reason text not null check (char_length(reason) between 3 and 500),
+  created_at timestamptz not null default now()
+);
+
 -- NOTIFICATIONS (likes/replies basic)
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
@@ -89,6 +113,9 @@ alter table public.media enable row level security;
 alter table public.likes enable row level security;
 alter table public.reposts enable row level security;
 alter table public.notifications enable row level security;
+alter table public.blocks enable row level security;
+alter table public.mutes enable row level security;
+alter table public.reports enable row level security;
 
 -- Users: read-all; update own (idempotent)
 do $$
@@ -107,6 +134,61 @@ begin
     select 1 from pg_policies where schemaname = 'public' and tablename = 'users' and policyname = 'users_update_own'
   ) then
     create policy users_update_own on public.users for update using (auth.uid() = id) with check (auth.uid() = id);
+  end if;
+end $$;
+
+-- Blocks: user can view own block relations (either direction); insert/delete only as blocker
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'blocks' and policyname = 'blocks_select_self'
+  ) then
+    create policy blocks_select_self on public.blocks for select using (blocker_id = auth.uid() or blocked_id = auth.uid());
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'blocks' and policyname = 'blocks_insert_own'
+  ) then
+    create policy blocks_insert_own on public.blocks for insert with check (blocker_id = auth.uid());
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'blocks' and policyname = 'blocks_delete_own'
+  ) then
+    create policy blocks_delete_own on public.blocks for delete using (blocker_id = auth.uid());
+  end if;
+end $$;
+
+-- Mutes: user can see own mute relations; insert/delete only as muter
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'mutes' and policyname = 'mutes_select_self'
+  ) then
+    create policy mutes_select_self on public.mutes for select using (muter_id = auth.uid() or muted_id = auth.uid());
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'mutes' and policyname = 'mutes_insert_own'
+  ) then
+    create policy mutes_insert_own on public.mutes for insert with check (muter_id = auth.uid());
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'mutes' and policyname = 'mutes_delete_own'
+  ) then
+    create policy mutes_delete_own on public.mutes for delete using (muter_id = auth.uid());
+  end if;
+end $$;
+
+-- Reports: reporter can select own reports; insert only as reporter
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'reports' and policyname = 'reports_select_own'
+  ) then
+    create policy reports_select_own on public.reports for select using (reporter_id = auth.uid());
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'reports' and policyname = 'reports_insert_own'
+  ) then
+    create policy reports_insert_own on public.reports for insert with check (reporter_id = auth.uid());
   end if;
 end $$;
 

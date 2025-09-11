@@ -31,14 +31,26 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
     if (error) return err(res, 500, 'load_notifications_failed')
     const items = (data ?? []) as Array<any>
 
-    // Enrich with actor and post details (best-effort; ignore failures)
-    let enriched = items
-    if (items.length) {
+    // Load block & mute lists to filter out unwanted notifications
+    const [blocksResp, blockedMeResp, mutesResp] = await Promise.all([
+      supabase.from('blocks').select('blocked_id').eq('blocker_id', req.user.sub),
+      supabase.from('blocks').select('blocker_id').eq('blocked_id', req.user.sub),
+      supabase.from('mutes').select('muted_id').eq('muter_id', req.user.sub),
+    ])
+    const blockedIds = (blocksResp.data ?? []).map((r: any) => r.blocked_id)
+    const blockedMeIds = (blockedMeResp.data ?? []).map((r: any) => r.blocker_id)
+    const mutedIds = (mutesResp.data ?? []).map((r: any) => r.muted_id)
+    const excluded = new Set([...blockedIds, ...blockedMeIds, ...mutedIds])
+    const filteredItems = items.filter((n) => !n.actor_id || !excluded.has(String(n.actor_id)))
+
+    // Enrich with actor and post details (best-effort; ignore failures) – supports like/follow/reply/repost
+    let enriched = filteredItems
+    if (filteredItems.length) {
       const actorIds = Array.from(
-        new Set(items.map((n) => n.actor_id).filter((v) => !!v))
+        new Set(filteredItems.map((n) => n.actor_id).filter((v) => !!v))
       ) as string[]
       const postIds = Array.from(
-        new Set(items.map((n) => n.post_id).filter((v) => !!v))
+        new Set(filteredItems.map((n) => n.post_id).filter((v) => !!v))
       ) as string[]
 
       const [actorsResp, postsResp] = await Promise.all([
@@ -59,7 +71,7 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
         for (const p of postsResp.data as any[]) postsById[String(p.id)] = p
       }
 
-      enriched = items.map((n) => ({
+      enriched = filteredItems.map((n) => ({
         ...n,
         actor: n.actor_id ? actorsById[String(n.actor_id)] ?? null : null,
         post: n.post_id ? postsById[String(n.post_id)] ?? null : null,
