@@ -19,12 +19,12 @@ This file tracks significant implementation milestones and updates.
 - Tables: users, posts (with reply_to_post_id, deleted_at), follows, likes, reposts, notifications, media, blocks, mutes, reports.
 - RLS enabled across all user-generated content tables.
 - Representative policies (naming may vary in SQL):
-	- users: read_all, insert_own (auth.uid() = id), update_own.
-	- posts: read_all (exclude soft-deleted), insert_own, update_own, soft_delete_own.
-	- follows / likes / reposts: read_all, write_own (auth.uid() matches actor columns).
-	- notifications: read_own (user_id), insert_actor (actor_id = auth.uid()).
-	- media: insert_own via post ownership, read_all public.
-	- moderation tables (blocks, mutes, reports): write_own & read_own as appropriate.
+  - users: read_all, insert_own (auth.uid() = id), update_own.
+  - posts: read_all (exclude soft-deleted), insert_own, update_own, soft_delete_own.
+  - follows / likes / reposts: read_all, write_own (auth.uid() matches actor columns).
+  - notifications: read_own (user_id), insert_actor (actor_id = auth.uid()).
+  - media: insert_own via post ownership, read_all public.
+  - moderation tables (blocks, mutes, reports): write_own & read_own as appropriate.
 - Indexes (from schema): posts(created_at,id), posts(reply_to_post_id,created_at), posts(deleted_at,created_at), follows(follower_id,followee_id), notifications(user_id,created_at), likes(post_id,created_at), reposts(post_id,created_at).
 - Seed scripts: `sql/schema.sql` (idempotent DDL) + `sql/seed.sql` (demo users, sample relationships).
 
