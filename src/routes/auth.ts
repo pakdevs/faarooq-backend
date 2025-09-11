@@ -5,6 +5,9 @@ import { supabaseAdmin, getRlsClient } from '../lib/supabase'
 
 export const router = Router()
 
+const err = (res: Response, status: number, code: string, message?: string, details?: any) =>
+  res.status(status).json({ error: { code, message: message ?? code, details } })
+
 const signupSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -18,11 +21,11 @@ const loginSchema = z.object({
 
 router.post('/signup', async (req: Request, res: Response) => {
   const parsed = signupSchema.safeParse(req.body)
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
+  if (!parsed.success) return err(res, 400, 'invalid_payload')
   const secret = process.env.JWT_SECRET
-  if (!secret) return res.status(500).json({ error: 'JWT secret not configured' })
+  if (!secret) return err(res, 500, 'jwt_not_configured')
   // Create auth user, then profile row with the same id
-  if (!supabaseAdmin) return res.status(500).json({ error: 'Supabase not configured' })
+  if (!supabaseAdmin) return err(res, 500, 'supabase_not_configured')
   try {
     const created = await supabaseAdmin.auth.admin.createUser({
       email: parsed.data.email,
@@ -32,7 +35,7 @@ router.post('/signup', async (req: Request, res: Response) => {
     const authUser = created.data?.user
     if (!authUser) {
       const msg = created.error?.message || 'auth create failed'
-      return res.status(500).json({ error: 'Auth create failed', detail: msg })
+      return err(res, 500, 'auth_create_failed', undefined, msg)
     }
     const authUserId = authUser.id
     // Sign in to obtain a Supabase access token for RLS-bound profile insert
@@ -56,9 +59,9 @@ router.post('/signup', async (req: Request, res: Response) => {
         await supabaseAdmin.auth.admin.deleteUser(authUserId)
       } catch {}
       if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
-        return res.status(409).json({ error: 'Handle already taken' })
+        return err(res, 409, 'handle_taken')
       }
-      return res.status(500).json({ error: 'DB user create failed', detail: msg })
+      return err(res, 500, 'profile_create_failed', undefined, msg)
     }
     const userId = String(insertData.id)
     const token = jwt.sign({ sub: userId, handle: insertData.handle, sb: accessToken }, secret, {
@@ -70,22 +73,22 @@ router.post('/signup', async (req: Request, res: Response) => {
     })
   } catch (e) {
     console.error('Signup with Supabase Auth failed:', e)
-    return res.status(500).json({ error: 'Signup failed', detail: String(e) })
+    return err(res, 500, 'signup_failed', undefined, String(e))
   }
 })
 
 router.post('/login', async (req: Request, res: Response) => {
   const parsed = loginSchema.safeParse(req.body)
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
+  if (!parsed.success) return err(res, 400, 'invalid_payload')
   const secret = process.env.JWT_SECRET
-  if (!secret) return res.status(500).json({ error: 'JWT secret not configured' })
-  if (!supabaseAdmin) return res.status(500).json({ error: 'Supabase not configured' })
+  if (!secret) return err(res, 500, 'jwt_not_configured')
+  if (!supabaseAdmin) return err(res, 500, 'supabase_not_configured')
   try {
     const { data, error } = await supabaseAdmin.auth.signInWithPassword({
       email: parsed.data.email,
       password: parsed.data.password,
     })
-    if (error || !data?.user) return res.status(401).json({ error: 'Invalid credentials' })
+    if (error || !data?.user) return err(res, 401, 'invalid_credentials')
     const userId = data.user.id
     // Ensure profile row exists (idempotent upsert by id with minimal defaults)
     await supabaseAdmin.from('users').upsert(
@@ -105,6 +108,6 @@ router.post('/login', async (req: Request, res: Response) => {
     )
     return res.json({ token })
   } catch (e) {
-    return res.status(500).json({ error: 'Login failed', detail: String(e) })
+    return err(res, 500, 'login_failed', undefined, String(e))
   }
 })

@@ -1,7 +1,7 @@
 {
     "item": [
         {
-            "id": "eb722bfa-eafc-45f7-a7b9-a4494960505d",
+            "id": "7a1ebcdb-4da7-4ba7-86f6-6ec4627258fe",
             "name": "Health check",
             "request": {
                 "name": "Health check",
@@ -22,7 +22,7 @@
             },
             "response": [
                 {
-                    "id": "2e65c02b-c978-4038-8985-aa3cc1ffea84",
+                    "id": "722d79b1-93da-4110-ab72-5fa1a994ce89",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -51,7 +51,7 @@
             }
         },
         {
-            "id": "ca32e5d2-6b94-4795-9f81-0cdb937e61ad",
+            "id": "a4b4cb55-fd22-4b9e-afd1-e1f95a222c23",
             "name": "Create user and return app JWT",
             "request": {
                 "name": "Create user and return app JWT",
@@ -93,8 +93,8 @@
             },
             "response": [
                 {
-                    "id": "537d8dc2-1337-46c9-bde9-6f0bdd359a96",
-                    "name": "Authenticated",
+                    "id": "a05407c4-7668-45d3-8ad0-c8c7a4893140",
+                    "name": "Created",
                     "originalRequest": {
                         "url": {
                             "path": [
@@ -130,8 +130,8 @@
                             }
                         }
                     },
-                    "status": "OK",
-                    "code": 200,
+                    "status": "Created",
+                    "code": 201,
                     "header": [
                         {
                             "key": "Content-Type",
@@ -143,7 +143,7 @@
                     "_postman_previewlanguage": "json"
                 },
                 {
-                    "id": "b24828cf-82aa-4362-8cda-ce01a2bddb26",
+                    "id": "728e983d-c5f9-4be8-bcd8-3f1dbcdbb77e",
                     "name": "Bad Request",
                     "originalRequest": {
                         "url": {
@@ -191,6 +191,106 @@
                     "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
                     "cookie": [],
                     "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "94d06982-8276-4e7d-8dde-c2bacbe63b59",
+                    "name": "Handle already taken",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "auth",
+                                "signup"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"<email>\",\n  \"password\": \"<string>\",\n  \"handle\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "status": "Conflict",
+                    "code": 409,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "7ee294ca-a467-42c2-a95e-7453fddd3467",
+                    "name": "Server error",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "auth",
+                                "signup"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"<email>\",\n  \"password\": \"<string>\",\n  \"handle\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "status": "Internal Server Error",
+                    "code": 500,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
                 }
             ],
             "event": [],
@@ -199,7 +299,7 @@
             }
         },
         {
-            "id": "459b4877-63a2-4e47-ae92-69bd34014566",
+            "id": "bfa82075-7b98-45d7-bc4f-9c07575ac8e1",
             "name": "Login and return app JWT",
             "request": {
                 "name": "Login and return app JWT",
@@ -241,7 +341,7 @@
             },
             "response": [
                 {
-                    "id": "532e533e-c814-4f23-aeef-03b407942171",
+                    "id": "4d0536cf-aefb-4784-bd8b-d0d046720b00",
                     "name": "Authenticated",
                     "originalRequest": {
                         "url": {
@@ -291,7 +391,57 @@
                     "_postman_previewlanguage": "json"
                 },
                 {
-                    "id": "26c56954-cf82-4b2d-8e70-269457391f9f",
+                    "id": "1734aa88-2d84-4a00-90a4-4720b7e5aac5",
+                    "name": "Bad Request",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"<string>\",\n  \"password\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "status": "Bad Request",
+                    "code": 400,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "5936f80c-063d-4596-8b03-7c7eead37e0d",
                     "name": "Unauthorized",
                     "originalRequest": {
                         "url": {
@@ -339,6 +489,56 @@
                     "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
                     "cookie": [],
                     "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "cf2354f3-ef30-49d2-9bc4-5313f2579f2a",
+                    "name": "Server error",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"<string>\",\n  \"password\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "status": "Internal Server Error",
+                    "code": 500,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
                 }
             ],
             "event": [],
@@ -347,7 +547,7 @@
             }
         },
         {
-            "id": "5de72758-1b09-4053-93da-72093b9013cc",
+            "id": "36d101d3-dedd-4470-9a9b-fcaf9535ec87",
             "name": "Get current user profile",
             "request": {
                 "name": "Get current user profile",
@@ -384,7 +584,7 @@
             },
             "response": [
                 {
-                    "id": "22f32cd4-eabb-413a-9366-c7bed0518a06",
+                    "id": "70af535e-720c-4631-9d6d-9ab645ebb6d6",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -429,7 +629,7 @@
                     "_postman_previewlanguage": "json"
                 },
                 {
-                    "id": "4c3a1497-a3e7-4476-8541-ed936c972e15",
+                    "id": "660c2919-457c-485a-8100-f9323909f85a",
                     "name": "Unauthorized",
                     "originalRequest": {
                         "url": {
@@ -446,6 +646,10 @@
                         },
                         "header": [
                             {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
                                 "description": {
                                     "content": "Added as a part of security scheme: bearer",
                                     "type": "text/plain"
@@ -459,9 +663,60 @@
                     },
                     "status": "Unauthorized",
                     "code": 401,
-                    "header": [],
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
                     "cookie": [],
-                    "_postman_previewlanguage": "text"
+                    "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "bdbd62d9-083d-4491-a221-b04f5a36d0e1",
+                    "name": "User not found",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "description": {
+                                    "content": "Added as a part of security scheme: bearer",
+                                    "type": "text/plain"
+                                },
+                                "key": "Authorization",
+                                "value": "Bearer <token>"
+                            }
+                        ],
+                        "method": "GET",
+                        "body": {}
+                    },
+                    "status": "Not Found",
+                    "code": 404,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
                 }
             ],
             "event": [],
@@ -470,7 +725,7 @@
             }
         },
         {
-            "id": "ddead2eb-b729-407d-8bc9-5da0bc14e4c6",
+            "id": "6ef1b4b5-80b0-472d-b7ee-ed97f63f1b44",
             "name": "Update current user profile",
             "request": {
                 "name": "Update current user profile",
@@ -490,6 +745,10 @@
                 "header": [
                     {
                         "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "Accept",
                         "value": "application/json"
                     }
                 ],
@@ -516,7 +775,7 @@
             },
             "response": [
                 {
-                    "id": "c92581b2-4135-4d29-950e-69898eebbd36",
+                    "id": "bd14b95e-9127-4db4-890b-c4852376b57f",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -534,6 +793,10 @@
                         "header": [
                             {
                                 "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
                                 "value": "application/json"
                             },
                             {
@@ -559,9 +822,305 @@
                     },
                     "status": "OK",
                     "code": 200,
-                    "header": [],
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"id\": \"<uuid>\",\n  \"handle\": \"<string>\",\n  \"display_name\": \"<string>\",\n  \"bio\": \"<string>\"\n}",
                     "cookie": [],
-                    "_postman_previewlanguage": "text"
+                    "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "5fd5e0d1-9457-4f08-97ec-626017e2668b",
+                    "name": "Bad Request",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "description": {
+                                    "content": "Added as a part of security scheme: bearer",
+                                    "type": "text/plain"
+                                },
+                                "key": "Authorization",
+                                "value": "Bearer <token>"
+                            }
+                        ],
+                        "method": "PUT",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"display_name\": \"<string>\",\n  \"bio\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "status": "Bad Request",
+                    "code": 400,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "ed14bddb-a315-4aa4-97f0-299ab9a83b69",
+                    "name": "Unauthorized",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "description": {
+                                    "content": "Added as a part of security scheme: bearer",
+                                    "type": "text/plain"
+                                },
+                                "key": "Authorization",
+                                "value": "Bearer <token>"
+                            }
+                        ],
+                        "method": "PUT",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"display_name\": \"<string>\",\n  \"bio\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "status": "Unauthorized",
+                    "code": 401,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "e4f66e08-db20-4350-bee7-64ac25f690db",
+                    "name": "User not found",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "description": {
+                                    "content": "Added as a part of security scheme: bearer",
+                                    "type": "text/plain"
+                                },
+                                "key": "Authorization",
+                                "value": "Bearer <token>"
+                            }
+                        ],
+                        "method": "PUT",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"display_name\": \"<string>\",\n  \"bio\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "status": "Not Found",
+                    "code": 404,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "5cc73db2-4d97-4ba5-8a7f-a74f9b7aff13",
+                    "name": "Handle already taken",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "description": {
+                                    "content": "Added as a part of security scheme: bearer",
+                                    "type": "text/plain"
+                                },
+                                "key": "Authorization",
+                                "value": "Bearer <token>"
+                            }
+                        ],
+                        "method": "PUT",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"display_name\": \"<string>\",\n  \"bio\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "status": "Conflict",
+                    "code": 409,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
+                },
+                {
+                    "id": "056c9a1e-02b7-45c8-950f-750228fef4c0",
+                    "name": "Server error",
+                    "originalRequest": {
+                        "url": {
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "description": {
+                                    "content": "Added as a part of security scheme: bearer",
+                                    "type": "text/plain"
+                                },
+                                "key": "Authorization",
+                                "value": "Bearer <token>"
+                            }
+                        ],
+                        "method": "PUT",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"display_name\": \"<string>\",\n  \"bio\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "status": "Internal Server Error",
+                    "code": 500,
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n  \"error\": {\n    \"code\": \"<string>\",\n    \"message\": \"<string>\",\n    \"details\": {}\n  }\n}",
+                    "cookie": [],
+                    "_postman_previewlanguage": "json"
                 }
             ],
             "event": [],
@@ -570,7 +1129,7 @@
             }
         },
         {
-            "id": "500aeb21-826e-4cc9-9d80-23fcee590c1d",
+            "id": "edf0b81c-8d93-4b46-a372-99ad79fe1f9b",
             "name": "Get timeline feed (posts + repost activities; excludes soft-deleted posts)",
             "request": {
                 "name": "Get timeline feed (posts + repost activities; excludes soft-deleted posts)",
@@ -616,7 +1175,7 @@
             },
             "response": [
                 {
-                    "id": "7655ec8e-2f90-4fca-b3b2-96e293059c91",
+                    "id": "46c50379-2149-47a8-994c-f333e1115e65",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -660,7 +1219,7 @@
                     "_postman_previewlanguage": "text"
                 },
                 {
-                    "id": "7327dbf0-5e9e-4c3a-b722-c10fa4b794ba",
+                    "id": "f1723515-663c-4212-ae93-ee857b716402",
                     "name": "Server error",
                     "originalRequest": {
                         "url": {
@@ -720,7 +1279,7 @@
             }
         },
         {
-            "id": "bcad11ed-05ab-4593-907e-26a01b7b0fb3",
+            "id": "3d27e61e-eb43-4255-b077-d3bdcf9fb970",
             "name": "Create post",
             "request": {
                 "name": "Create post",
@@ -769,7 +1328,7 @@
             },
             "response": [
                 {
-                    "id": "690e5f35-bd05-4782-9678-d770ca09556e",
+                    "id": "4dd378c1-23b9-4021-ab36-a3f728afb73f",
                     "name": "Created",
                     "originalRequest": {
                         "url": {
@@ -816,7 +1375,7 @@
                     "_postman_previewlanguage": "text"
                 },
                 {
-                    "id": "8b0c27b2-74a3-4436-876d-38db9c65b548",
+                    "id": "03f53f21-9a4a-4e38-853b-be14f6a36e16",
                     "name": "Invalid payload",
                     "originalRequest": {
                         "url": {
@@ -879,7 +1438,7 @@
             }
         },
         {
-            "id": "6ad9248c-8e0a-4f25-9428-445694dadd29",
+            "id": "0ca5e6ff-4504-47b5-a774-62024bf337be",
             "name": "Repost a post",
             "request": {
                 "name": "Repost a post",
@@ -924,7 +1483,7 @@
             },
             "response": [
                 {
-                    "id": "b89e234d-5f6e-4b49-94f2-053d183592af",
+                    "id": "39817d6d-6e3f-4e98-9443-30716f1ade63",
                     "name": "Created",
                     "originalRequest": {
                         "url": {
@@ -971,7 +1530,7 @@
                     "_postman_previewlanguage": "text"
                 },
                 {
-                    "id": "8a1fa1ec-174f-48d4-a26b-b684c08e93f0",
+                    "id": "c0d1a1d9-66c7-453b-a7eb-b849c820f15f",
                     "name": "Bad Request",
                     "originalRequest": {
                         "url": {
@@ -1024,7 +1583,7 @@
             }
         },
         {
-            "id": "f8f9e6cf-4559-4f26-89d2-0fadef7a18e4",
+            "id": "dc77076e-f96a-4de9-aacf-6fe1a64bac4b",
             "name": "Unrepost a post",
             "request": {
                 "name": "Unrepost a post",
@@ -1069,7 +1628,7 @@
             },
             "response": [
                 {
-                    "id": "7cad2011-ab4e-4b60-a6c8-a90084d63a90",
+                    "id": "945c5dd4-0966-444e-a837-20696d93170b",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -1122,7 +1681,7 @@
             }
         },
         {
-            "id": "bf7e48dd-e172-4617-93fe-81026c029eb1",
+            "id": "dae4d9c3-77f9-447b-9d63-e7821311c991",
             "name": "Reply to a post",
             "request": {
                 "name": "Reply to a post",
@@ -1184,7 +1743,7 @@
             },
             "response": [
                 {
-                    "id": "7a95ba30-8726-49d9-9b46-4512c1fad785",
+                    "id": "d13d4281-1dc7-4fee-9541-b42fc0f75a43",
                     "name": "Created",
                     "originalRequest": {
                         "url": {
@@ -1233,7 +1792,7 @@
                     "_postman_previewlanguage": "text"
                 },
                 {
-                    "id": "b3e1cadd-f9bd-48d1-aa9b-5c697c01822c",
+                    "id": "8a161edd-a0a3-40b8-a1eb-5c65fb1f0ce4",
                     "name": "Parent not found",
                     "originalRequest": {
                         "url": {
@@ -1298,7 +1857,7 @@
             }
         },
         {
-            "id": "d0f6c1d5-7fb7-4b64-9d44-fae98aefe1ba",
+            "id": "92a98bcd-28bf-4119-a7d7-6f3b48abfc20",
             "name": "List replies for a post (excludes soft-deleted)",
             "request": {
                 "name": "List replies for a post (excludes soft-deleted)",
@@ -1351,7 +1910,7 @@
             },
             "response": [
                 {
-                    "id": "66e53705-e181-4289-8d8b-a5ffc0c2d903",
+                    "id": "3036a47b-d65c-4757-b344-06b0349e2f9e",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -1403,7 +1962,7 @@
             }
         },
         {
-            "id": "cd061363-8613-49b3-a2bc-c066335151c0",
+            "id": "5b7b6527-645e-4591-bf29-104c46cc96f9",
             "name": "Follow a user",
             "request": {
                 "name": "Follow a user",
@@ -1452,7 +2011,7 @@
             },
             "response": [
                 {
-                    "id": "337661a9-28dd-4278-bde6-26233144496d",
+                    "id": "b1e84a54-7b4a-4fdf-a6ee-8a3296dd4827",
                     "name": "Created",
                     "originalRequest": {
                         "url": {
@@ -1499,7 +2058,7 @@
                     "_postman_previewlanguage": "text"
                 },
                 {
-                    "id": "a4f75cf9-3ae4-49db-b68a-8b74e58131ce",
+                    "id": "c1f41ec8-5b97-47b9-9a3d-423d7d8d930c",
                     "name": "Bad Request",
                     "originalRequest": {
                         "url": {
@@ -1562,7 +2121,7 @@
             }
         },
         {
-            "id": "8dd8f0f3-aa62-4f5a-af3d-a12461ff64ee",
+            "id": "0e06e581-94b6-45e9-955e-df44948f720a",
             "name": "Unfollow a user",
             "request": {
                 "name": "Unfollow a user",
@@ -1611,7 +2170,7 @@
             },
             "response": [
                 {
-                    "id": "6d3830b2-5a52-40b0-ba01-579d448c7d13",
+                    "id": "f308dc29-1de9-4433-bfc8-8448977cd54b",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -1658,7 +2217,7 @@
                     "_postman_previewlanguage": "text"
                 },
                 {
-                    "id": "1cb026ee-5667-4432-b1ae-8f30f5621697",
+                    "id": "cc1fae9e-048d-4eae-8c73-dc14cd9495c2",
                     "name": "Bad Request",
                     "originalRequest": {
                         "url": {
@@ -1721,7 +2280,7 @@
             }
         },
         {
-            "id": "ecb241f1-3ffc-40c2-9605-f60fbd55b605",
+            "id": "7d6d695e-670a-4279-9dcb-3b4677c3f083",
             "name": "Like a post",
             "request": {
                 "name": "Like a post",
@@ -1770,7 +2329,7 @@
             },
             "response": [
                 {
-                    "id": "581395a7-4f08-494d-a255-09cd295d0c6c",
+                    "id": "5f3f1697-ab23-421e-a359-d4a2c9183f57",
                     "name": "Created",
                     "originalRequest": {
                         "url": {
@@ -1817,7 +2376,7 @@
                     "_postman_previewlanguage": "text"
                 },
                 {
-                    "id": "4bf513e3-bd9b-4c47-97f1-6fc88ca785e2",
+                    "id": "b28c42b9-af58-434f-a872-3f9c35fc19ef",
                     "name": "Bad Request",
                     "originalRequest": {
                         "url": {
@@ -1880,7 +2439,7 @@
             }
         },
         {
-            "id": "b0948a50-d4d1-449a-8d8b-3a9f23fbba91",
+            "id": "e191e098-9200-4a79-98d3-b96e7ece1521",
             "name": "Unlike a post",
             "request": {
                 "name": "Unlike a post",
@@ -1925,7 +2484,7 @@
             },
             "response": [
                 {
-                    "id": "26eca481-8027-4ca1-85bf-07e44e66565e",
+                    "id": "fa176ebb-4aa9-485f-831d-fee580b072a0",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -1978,7 +2537,7 @@
             }
         },
         {
-            "id": "c57adc0e-141e-44aa-8795-7cd263e0618b",
+            "id": "02a13af3-1b8b-4148-8171-a34d79bb392f",
             "name": "List notifications",
             "request": {
                 "name": "List notifications",
@@ -2024,7 +2583,7 @@
             },
             "response": [
                 {
-                    "id": "13f4980f-9c92-4528-a87a-ef0cf99a0312",
+                    "id": "577eae23-1e04-47b9-88a4-8f3acf04c29e",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -2068,7 +2627,7 @@
                     "_postman_previewlanguage": "text"
                 },
                 {
-                    "id": "84b6e0bb-b3d4-4520-bab0-f3d496e3e6a1",
+                    "id": "adb27aac-2bc4-4713-ae44-e1cf7f98d6a5",
                     "name": "Server error",
                     "originalRequest": {
                         "url": {
@@ -2128,7 +2687,7 @@
             }
         },
         {
-            "id": "4028fa9c-dba7-460e-a23d-adf50b15c063",
+            "id": "2ac0d94c-5346-49b8-8af1-0b430f07c26b",
             "name": "Mark notifications read",
             "request": {
                 "name": "Mark notifications read",
@@ -2178,7 +2737,7 @@
             },
             "response": [
                 {
-                    "id": "d6ce314c-a53c-4ad2-ad2b-fe43a5ec5136",
+                    "id": "995bf1de-8d84-4331-abea-1394b0e255f4",
                     "name": "OK",
                     "originalRequest": {
                         "url": {
@@ -2226,7 +2785,7 @@
                     "_postman_previewlanguage": "text"
                 },
                 {
-                    "id": "57c83e83-e3f4-4d8f-bab1-846e9521ccdc",
+                    "id": "948f7f03-a36b-45a6-8d3e-edd12a842f17",
                     "name": "Bad Request",
                     "originalRequest": {
                         "url": {
@@ -2284,7 +2843,7 @@
                     "_postman_previewlanguage": "json"
                 },
                 {
-                    "id": "ce4e3008-838d-43d9-b7d3-ff45a349fe2c",
+                    "id": "86560af0-47cc-48cf-9a91-532041333627",
                     "name": "Server error",
                     "originalRequest": {
                         "url": {
@@ -2356,7 +2915,7 @@
         }
     ],
     "info": {
-        "_postman_id": "df8bc8ef-a10b-4cb4-af49-579fcde5d520",
+        "_postman_id": "6213539c-22f7-470c-a693-359c436b4f88",
         "name": "Faarooq Backend API",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "description": {

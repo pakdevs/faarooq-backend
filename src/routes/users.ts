@@ -5,13 +5,16 @@ import { z } from 'zod'
 
 export const router = Router()
 
+const err = (res: Response, status: number, code: string, message?: string, details?: any) =>
+  res.status(status).json({ error: { code, message: message ?? code, details } })
+
 // Get current user's profile
 router.get('/me', requireAuth, async (req: Request, res: Response) => {
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!req.user) return err(res, 401, 'unauthorized')
   const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json({ id: req.user.sub, handle: 'stub', display_name: 'Stub' })
   const { data, error } = await supabase.from('users').select('*').eq('id', req.user.sub).single()
-  if (error || !data) return res.status(404).json({ error: 'User not found' })
+  if (error || !data) return err(res, 404, 'user_not_found')
   return res.json(data)
 })
 
@@ -24,9 +27,9 @@ const updateSchema = z.object({
 })
 
 router.put('/me', requireAuth, async (req: Request, res: Response) => {
-  if (!req.user) return res.status(401).json({ error: 'Unauthorized' })
+  if (!req.user) return err(res, 401, 'unauthorized')
   const parsed = updateSchema.safeParse(req.body)
-  if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
+  if (!parsed.success) return err(res, 400, 'invalid_payload')
   const supabase = getRlsClient(req.user.sb)
   if (!supabase) return res.json({ ok: true })
   try {
@@ -39,14 +42,14 @@ router.put('/me', requireAuth, async (req: Request, res: Response) => {
     if (error) {
       const msg = error.message || ''
       if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
-        return res.status(409).json({ error: 'Handle already taken' })
+        return err(res, 409, 'handle_taken')
       }
-      return res.status(500).json({ error: 'Failed to update profile' })
+      return err(res, 500, 'update_failed')
     }
-    if (!data) return res.status(404).json({ error: 'User not found' })
+    if (!data) return err(res, 404, 'user_not_found')
     return res.json(data)
   } catch {
-    return res.status(500).json({ error: 'Server error' })
+    return err(res, 500, 'server_error')
   }
 })
 
@@ -56,6 +59,6 @@ router.get('/:id', async (req: Request, res: Response) => {
   const supabase = getRlsClient() // anon client; users_read_all policy allows public read
   if (!supabase) return res.json({ id, handle: 'stub', display_name: 'Stub' })
   const { data, error } = await supabase.from('users').select('*').eq('id', id).single()
-  if (error || !data) return res.status(404).json({ error: 'User not found' })
+  if (error || !data) return err(res, 404, 'user_not_found')
   return res.json(data)
 })
