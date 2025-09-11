@@ -129,3 +129,31 @@ faarook/
 This snapshot originated from the deprecated `zebraCrossing/tree.md` and is retained here for historical context only.
 
 -- End Phase 01 Document --
+## 11. Actionable Checklist (Operationalized)
+
+### Immediate Hardening
+- [ ] Define SLOs (availability %, p95 latency target) & publish.
+- [ ] Threat model & secret rotation policy doc.
+- [ ] Idempotency key support for POST /api/posts & interactions.
+- [ ] Event naming catalog (user.signup, post.created, post.liked, follow.created).
+- [ ] x-api-version (v1) header + OpenAPI extension.
+
+### Reliability Prep
+- [ ] Chaos flag (CHAOS_PROB) in staging only.
+- [ ] Central rate limit config JSON (source of truth for code + docs).
+
+### Documentation
+- [ ] Error code catalog table.
+- [ ] Data retention matrix.
+
+### Security
+- [ ] CSP report-only week & analyze violations.
+- [ ] JWT dual-secret rotation strategy.
+
+### Testing
+- [ ] Repost feed merge ordering test.
+- [ ] Block/mute concealment test.
+
+Unfinished items escalate to Phase 02 backlog if still open at cutover.
+
+-- End Phase 01 Document --
