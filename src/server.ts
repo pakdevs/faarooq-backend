@@ -19,6 +19,7 @@ import { router as mediaRouter } from './routes/media'
 import { router as moderationRouter } from './routes/moderation'
 import { metricsMiddleware, metricsSnapshot, metricsPrometheus } from './middleware/metrics'
 import { loadSecurityConfig, helmetCspFromDirectives } from './config/security'
+import { rateLimitPolicies } from './config/rateLimits'
 
 const app = express()
 
@@ -64,6 +65,12 @@ app.use(express.json({ limit: globalBodyLimit }) as any)
 app.use(morgan('dev') as any) // keep concise console access log in dev
 app.use(metricsMiddleware())
 
+// API version header injection
+app.use((req, res, next) => {
+  res.setHeader('X-API-Version', 'v1')
+  next()
+})
+
 const limiter = rateLimit({ windowMs: 60 * 1000, max: 120 })
 app.use(limiter)
 
@@ -78,6 +85,11 @@ app.get('/metrics', (_req: Request, res: Response) => {
 
 app.get('/metrics.prom', (_req: Request, res: Response) => {
   res.type('text/plain').send(metricsPrometheus())
+})
+
+// Expose rate limit catalog (read-only) for transparency (non-auth)
+app.get('/rate-limit-policies', (_req: Request, res: Response) => {
+  res.json({ policies: rateLimitPolicies })
 })
 
 // OpenAPI spec and docs
